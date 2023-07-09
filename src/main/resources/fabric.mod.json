@@ -19,7 +19,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.MCCIStats"
+      "me.danielml.MCCIStats"
     ]
   },
 

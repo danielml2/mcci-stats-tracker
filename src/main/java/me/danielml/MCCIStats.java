@@ -1,10 +1,15 @@
 package me.danielml;
 
+import me.danielml.mixin.TitleSubtitleMixin;
+import me.danielml.screen.DebugScreen;
 import me.danielml.util.ScoreboardUtil;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.scoreboard.Scoreboard;
 
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -28,7 +33,7 @@ public class MCCIStats implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
-
+		HudRenderCallback.EVENT.register(new DebugScreen());
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 
@@ -44,7 +49,22 @@ public class MCCIStats implements ModInitializer {
 
 				if(objective == null)
 					return;
+
 				detectMode(objective);
+
+				Text title = ((TitleSubtitleMixin)minecraftClient.inGameHud).getTitle();
+				Text subtitle = ((TitleSubtitleMixin)minecraftClient.inGameHud).getSubtitle();
+
+				String titleString = title != null ? title.getString() : "None";
+				String subtitleString = subtitle != null ? subtitle.getString() : "None";
+				DebugScreen.logText("Currently playing: " + currentGame + "\n Title: " + titleString + " \n Subtitle:" + subtitleString);
+
+
+				// Hole in the Wall: Placement, Top wall speed?, Average placement,  (Placement shows in subtitles, also players remaining on the sidebar)
+				// Battle Box: Eliminations (Chat + Title), Personal Placement (Sidebar/Endgame chat), Team Placement (Endgame Chat/Sidebar), Game Over (Title & Chat), Team (Sidebar)
+				// Sky Battle: Personal Placement (Sidebar), Survivor Placement (Chat / Title), Eliminations (Chat & Title), Avg Team Placement (Chat / Title), Game over: chat
+				// TGTTOS: Avg Placement per Map (Chat/Subtitle), Avg Game Placement, Avg/Time per Map (Chat) Avg Placement per map IN THIS SPECIFIC GAME (Sidebar, Chat)
+				// PKWS: Avg Time for Leap / Map (Chat), Avg Placement (Title + Chat), Avg Placement per Leap (Sidebar)
 			});
 		});
 

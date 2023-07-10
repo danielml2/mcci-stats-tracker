@@ -18,7 +18,7 @@ public class ScoreboardUtil {
         return client.player != null && client.player.getScoreboard() != null ? Optional.of(client.player.getScoreboard()) : Optional.empty();
     }
 
-    public static List<String> getSidebarText(Scoreboard scoreboard) {
+    public static List<String> getSidebarRows(Scoreboard scoreboard) {
         return scoreboard.getKnownPlayers().stream().map((playerName) -> {
             LOGGER.info(playerName + "prefix: " + scoreboard.getPlayerTeam(playerName).getPrefix().getString());
             return scoreboard.getPlayerTeam(playerName).getPrefix().getString();

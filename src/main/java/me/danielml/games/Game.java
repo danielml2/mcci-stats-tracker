@@ -5,6 +5,7 @@ package me.danielml.games;
 import net.minecraft.text.Text;
 
 import java.text.DecimalFormat;
+import java.util.List;
 
 import static me.danielml.MCCIStats.LOGGER;
 
@@ -33,7 +34,8 @@ public abstract class Game {
         int endIndex = 0;
         int startIndex = 0;
 
-        for(char ch : text.toCharArray()) {
+        String newText = text.replaceAll(" ", "");
+        for(char ch : newText.toCharArray()) {
             if(ch == ' ') {
                 startIndex++;
             } else if(!Character.isDigit(ch))
@@ -44,6 +46,14 @@ public abstract class Game {
             endIndex++;
         }
 
-        return Integer.parseInt(text.substring(startIndex, endIndex));
+        return Integer.parseInt(newText.substring(startIndex, endIndex));
+    }
+
+    public final String formatTime(double timeInSeconds) {
+        int minutes = (int) timeInSeconds / 60;
+        double remainingSeconds = timeInSeconds % 60;
+        String formattedMinutes = String.format("%02d", minutes);
+        String formattedSeconds = String.format("%.2f", remainingSeconds);
+        return formattedMinutes + ":" + formattedSeconds;
     }
 }

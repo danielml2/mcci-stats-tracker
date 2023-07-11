@@ -10,12 +10,17 @@ import static me.danielml.MCCIStats.LOGGER;
 
 public abstract class Game {
 
-    protected DecimalFormat twoDigitFormat = new DecimalFormat("#.##");
+    protected final DecimalFormat twoDigitFormat = new DecimalFormat("#.##");
 
     public void onChatMessageInGame(Text messageText) {}
 
-    public void onTitleOrSubtitleChange(Text title, Text subtitle) {}
+    public void onTitleChange(String title) {}
 
+    public void onSubtitleChange(String subtitle) {
+
+    }
+
+    public void onSidebarUpdate(List<String> sidebarRows) {}
     public void saveData() {}
 
     public void loadData() {}

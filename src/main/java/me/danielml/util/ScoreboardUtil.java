@@ -21,7 +21,13 @@ public class ScoreboardUtil {
     public static List<String> getSidebarRows(Scoreboard scoreboard) {
         var list = scoreboard.getKnownPlayers()
                 .stream()
-                .map((playerName) -> scoreboard.getPlayerTeam(playerName).getPrefix().getString())
+                .map((playerName) -> {
+                    var team = scoreboard.getPlayerTeam(playerName);
+                    if(team != null)
+                        return team.getPrefix().getString();
+                    else
+                        return "Team is null";
+                })
                 .collect(Collectors.toList());
         Collections.reverse(list);
         return list;

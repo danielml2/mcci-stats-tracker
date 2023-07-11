@@ -34,9 +34,12 @@ public class MCCIStats implements ModInitializer {
 			new TGTTOS(),
 			new BattleBox()
 	};
-	private final Game NONE = new None();
+	private static final Game NONE = new None();
 
-	private Game currentGame = NONE;
+	private static Game currentGame = NONE;
+
+	private String lastTitle;
+	private String lastSubtitle;
 
 	@Override
 	public void onInitialize() {
@@ -66,8 +69,20 @@ public class MCCIStats implements ModInitializer {
 				Text title = ((TitleSubtitleMixin)minecraftClient.inGameHud).getTitle();
 				Text subtitle = ((TitleSubtitleMixin)minecraftClient.inGameHud).getSubtitle();
 
-				String titleString = title != null ? title.getString() : "None";
-				String subtitleString = subtitle != null ? subtitle.getString() : "None";
+				String titleString = title != null ? title.getString() : "";
+				String subtitleString = subtitle != null ? subtitle.getString() : "";
+				if(!titleString.equals(lastTitle))
+				{
+					LOGGER.info("New title: '" + lastTitle + "' -> '" + titleString + "'");
+					lastTitle = titleString;
+					currentGame.onTitleChange(lastTitle);
+				}
+				if(!subtitleString.equals(lastSubtitle)) {
+					LOGGER.info("New subtitle: '" + lastSubtitle + "' -> '" + subtitleString + "'");
+					lastSubtitle = subtitleString;
+					currentGame.onSubtitleChange(subtitleString);
+				}
+
 
 				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n ");
 				debugText.append(currentGame.displayData()).append(" \n");
@@ -152,5 +167,15 @@ public class MCCIStats implements ModInitializer {
 		return optional.orElse(NONE);
 	}
 
+	public static void onScoreboardUpdate() {
+
+		MinecraftClient client = MinecraftClient.getInstance();
+		if(client != null)
+			ScoreboardUtil.getCurrentScoreboard(client).ifPresent(scoreboard -> {
+				var rows = ScoreboardUtil.getSidebarRows(scoreboard);
+				LOGGER.info("Sidebar update!");
+				currentGame.onSidebarUpdate(rows);
+			});
+	}
 
 }

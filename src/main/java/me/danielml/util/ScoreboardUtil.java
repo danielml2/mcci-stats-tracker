@@ -19,10 +19,12 @@ public class ScoreboardUtil {
     }
 
     public static List<String> getSidebarRows(Scoreboard scoreboard) {
-        return scoreboard.getKnownPlayers().stream().map((playerName) -> {
-            LOGGER.info(playerName + "prefix: " + scoreboard.getPlayerTeam(playerName).getPrefix().getString());
-            return scoreboard.getPlayerTeam(playerName).getPrefix().getString();
-        }).collect(Collectors.toList());
+        var list = scoreboard.getKnownPlayers()
+                .stream()
+                .map((playerName) -> scoreboard.getPlayerTeam(playerName).getPrefix().getString())
+                .collect(Collectors.toList());
+        Collections.reverse(list);
+        return list;
     }
 
 }

@@ -1,11 +1,12 @@
 package me.danielml.games.minigames;
 
+import com.sun.jna.platform.win32.OaIdl;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
+import org.apache.commons.logging.Log;
 
-import javax.print.DocFlavor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
@@ -13,7 +14,6 @@ import java.util.List;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static me.danielml.MCCIStats.LOGGER;
 
@@ -26,7 +26,10 @@ public class ParkourWarriorSurvivor extends Game  {
     private int[] leapPlacementsInCurrentGame;
     private double averageLeapPlacementsInCurrentGame;
     private ArrayList<Double>[] timesPerLeap;
-    private int currentLeap = 1;
+    private int currentPlayerLeap = 1;
+    private int currentGameLeap = 1;
+    private int playerCompletedLeaps = 0;
+    private long unfinishedLeapTime = 0;
     private double currentLeapAverage, currentLeapBest;
     private boolean eliminated = false;
 
@@ -67,18 +70,33 @@ public class ParkourWarriorSurvivor extends Game  {
 
         } else if(messageContent.contains("Leap") && messageContent.contains("complete in") && messageContent.startsWith("[\uE000]")) {
 
-            String[] timerSplit = messageContent.split("complete in: ");
-            LOGGER.info("Timer Split: " + Arrays.toString(timerSplit));
-            String[] minutesAndSecondsSplit = timerSplit[1].split(":");
-            LOGGER.info("Minutes And Seconds Split: " + Arrays.toString(minutesAndSecondsSplit));
+            double finalTimeInSeconds;
 
-            double minutes = Double.parseDouble(minutesAndSecondsSplit[0].replaceAll(" ", ""));
-            String[] secondsSeparation = minutesAndSecondsSplit[1].split(" \\[");
-            LOGGER.info("Seconds Separation: " + Arrays.toString(secondsSeparation));
-            double seconds = Double.parseDouble(secondsSeparation[0].replaceAll(" ", ""));
-
-            double finalTimeInSeconds = minutes * 60 + seconds;
             int leapNumber = extractNumberFromText(messageContent.split("Leap")[1]);
+            playerCompletedLeaps = extractNumberFromText(messageContent.split("Leap")[1]);
+
+            // Finished after time ran out
+            if(playerCompletedLeaps < currentGameLeap) {
+                unfinishedLeapTime = System.currentTimeMillis() - unfinishedLeapTime;
+                finalTimeInSeconds = (double) unfinishedLeapTime / 1000;
+                LOGGER.info("Finished outside of player/time limit, recalculated time is: " + finalTimeInSeconds);
+                LOGGER.info("Re-started unfinished time in the case they don't finish on time (again)");
+                unfinishedLeapTime = System.currentTimeMillis(); // Started timer for the next leap the player is catching up on.
+                currentPlayerLeap = leapNumber + 1;
+            } else {
+                // If finished in time, use the message for the time
+                String[] timerSplit = messageContent.split("complete in: ");
+                LOGGER.info("Timer Split: " + Arrays.toString(timerSplit));
+                String[] minutesAndSecondsSplit = timerSplit[1].split(":");
+                LOGGER.info("Minutes And Seconds Split: " + Arrays.toString(minutesAndSecondsSplit));
+
+                double minutes = Double.parseDouble(minutesAndSecondsSplit[0].replaceAll(" ", ""));
+                String[] secondsSeparation = minutesAndSecondsSplit[1].split(" \\[");
+                LOGGER.info("Seconds Separation: " + Arrays.toString(secondsSeparation));
+                double seconds = Double.parseDouble(secondsSeparation[0].replaceAll(" ", ""));
+
+                finalTimeInSeconds = minutes * 60 + seconds;
+            }
 
             if(timesPerLeap[leapNumber-1] != null)
                 timesPerLeap[leapNumber-1].add(finalTimeInSeconds);
@@ -87,26 +105,35 @@ public class ParkourWarriorSurvivor extends Game  {
                 timesPerLeap[leapNumber-1].add(finalTimeInSeconds);
             }
 
+
             LOGGER.info("Leap " + leapNumber + " ended at: " + finalTimeInSeconds + " seconds");
             LOGGER.info("Formatted leap time: " + formatTime(finalTimeInSeconds));
+            updateCurrentLeapStats();
 
         } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[\uE075]")) {
-            currentLeap = 1;
+            currentPlayerLeap = 1;
             updateCurrentLeapStats();
             leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
             eliminated = false;
 
         } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[\uE075]") && !eliminated) {
-            currentLeap = extractNumberFromText(messageContent.split("Leap")[1]);
-            LOGGER.info("Leap " + currentLeap + " started!");
+            currentPlayerLeap = extractNumberFromText(messageContent.split("Leap")[1]);
+            LOGGER.info("Leap " + currentPlayerLeap + " started!");
+            unfinishedLeapTime = System.currentTimeMillis();
             updateCurrentLeapStats();
-        }
 
+        } else if(messageContent.contains("Leap") && messageContent.contains("ended") && messageContent.startsWith("[\uE075]")) {
+            // The leap ended message will ALWAYS send after you complete (if you complete in time),
+            // only if you don't complete it in time the ended message will send BEFORE the complete message (requiring custom time instead of the message).
+            int leapEnded = extractNumberFromText(messageContent.split("Leap")[1]);
+            currentGameLeap = leapEnded + 1;
+            LOGGER.info("Current Game Leap: " + currentGameLeap);
+        }
     }
 
     @Override
     public void onSidebarUpdate(List<String> sidebarRows) {
-        for(int i = 0; i < currentLeap; i++) {
+        for(int i = 0; i < playerCompletedLeaps; i++) {
             if(leapPlacementsInCurrentGame[i] == -1) {
                 int placement = getLeapPlacementFromSidebar(i+1);
                 if(placement != -1)
@@ -114,9 +141,9 @@ public class ParkourWarriorSurvivor extends Game  {
                     LOGGER.info("Found placement for leap " + (i+1) + "!");
                     leapPlacementsInCurrentGame[i] = placement;
                     var gameAvgPlacementsStats = Arrays.stream(leapPlacementsInCurrentGame).filter(p -> p != -1).summaryStatistics();
-                    LOGGER.info("Current Game Leap Array: " + Arrays.toString(leapPlacementsInCurrentGame));
+                    LOGGER.info("Current Game Leap Placements Array: " + Arrays.toString(leapPlacementsInCurrentGame));
                     averageLeapPlacementsInCurrentGame = gameAvgPlacementsStats.getAverage();
-                    LOGGER.info("Current Game Leap Average: " + averageLeapPlacementsInCurrentGame);
+                    LOGGER.info("Current Game Leap Placements Average: " + averageLeapPlacementsInCurrentGame);
                     updateCurrentLeapStats();
                 } else {
                     LOGGER.info("No leap placement available yet for leap " + (i+1));
@@ -131,8 +158,8 @@ public class ParkourWarriorSurvivor extends Game  {
         return "Last Placement: " + lastPlacement + "\n " +
                 "Average Game Placement: " + ((int)averagePlacement) + "(" + twoDigitFormat.format(averagePlacement) + ") \n " +
                 "Average Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + "(" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
-                "Current Leap (" + currentLeap + ") Average Time: " + formatTime(currentLeapAverage) + " \n" +
-                "Current Leap (" + currentLeap + ") Best Time: " + formatTime(currentLeapBest);
+                "Current Leap (" + currentPlayerLeap + ") Average Time: " + formatTime(currentLeapAverage) + " \n" +
+                "Current Leap (" + currentPlayerLeap + ") Best Time: " + formatTime(currentLeapBest);
     }
 
     @Override
@@ -141,9 +168,9 @@ public class ParkourWarriorSurvivor extends Game  {
     }
 
     public void updateCurrentLeapStats() {
-        if(timesPerLeap[currentLeap-1] != null){
-            LOGGER.info("Updated current leap stats for Leap " + currentLeap);
-            DoubleSummaryStatistics stats = timesPerLeap[currentLeap-1].stream().mapToDouble(Double::doubleValue).summaryStatistics();
+        if(timesPerLeap[currentPlayerLeap -1] != null){
+            LOGGER.info("Updated current leap stats for Leap " + currentPlayerLeap);
+            DoubleSummaryStatistics stats = timesPerLeap[currentPlayerLeap -1].stream().mapToDouble(Double::doubleValue).summaryStatistics();
             currentLeapAverage = stats.getAverage();
             currentLeapBest = stats.getMin();
         } else {

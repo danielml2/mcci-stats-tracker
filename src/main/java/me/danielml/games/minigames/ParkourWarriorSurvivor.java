@@ -28,7 +28,7 @@ public class ParkourWarriorSurvivor extends Game  {
     private ArrayList<Double>[] timesPerLeap;
     private int currentLeap = 1;
     private double currentLeapAverage, currentLeapBest;
-    private boolean eliminated = false, waitingForLeapPlacement = false;
+    private boolean eliminated = false;
 
     public ParkourWarriorSurvivor() {
         lastPlacement = 0;
@@ -89,7 +89,6 @@ public class ParkourWarriorSurvivor extends Game  {
 
             LOGGER.info("Leap " + leapNumber + " ended at: " + finalTimeInSeconds + " seconds");
             LOGGER.info("Formatted leap time: " + formatTime(finalTimeInSeconds));
-            waitingForLeapPlacement = true;
 
         } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[\uE075]")) {
             currentLeap = 1;
@@ -98,7 +97,8 @@ public class ParkourWarriorSurvivor extends Game  {
             eliminated = false;
 
         } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[\uE075]") && !eliminated) {
-            currentLeap += 1;
+            currentLeap = extractNumberFromText(messageContent.split("Leap")[1]);
+            LOGGER.info("Leap " + currentLeap + " started!");
             updateCurrentLeapStats();
         }
 
@@ -106,19 +106,23 @@ public class ParkourWarriorSurvivor extends Game  {
 
     @Override
     public void onSidebarUpdate(List<String> sidebarRows) {
-        if(waitingForLeapPlacement) {
-            int placement = getLeapPlacementFromSidebar(currentLeap);
-            if(placement != -1)
-            {
-                LOGGER.info("Found placement for leap " + currentLeap + "!");
-                leapPlacementsInCurrentGame[currentLeap-1] = placement;
-                var gameAvgPlacementsStats = Arrays.stream(leapPlacementsInCurrentGame).filter(i -> i != -1).summaryStatistics();
-                LOGGER.info("Current Game Leap Array: " + Arrays.toString(leapPlacementsInCurrentGame));
-                averageLeapPlacementsInCurrentGame = gameAvgPlacementsStats.getAverage();
-                LOGGER.info("Current Game Leap Average: " + averageLeapPlacementsInCurrentGame);
-                updateCurrentLeapStats();
-                waitingForLeapPlacement = false;
+        for(int i = 0; i < currentLeap; i++) {
+            if(leapPlacementsInCurrentGame[i] == -1) {
+                int placement = getLeapPlacementFromSidebar(i+1);
+                if(placement != -1)
+                {
+                    LOGGER.info("Found placement for leap " + (i+1) + "!");
+                    leapPlacementsInCurrentGame[i] = placement;
+                    var gameAvgPlacementsStats = Arrays.stream(leapPlacementsInCurrentGame).filter(p -> p != -1).summaryStatistics();
+                    LOGGER.info("Current Game Leap Array: " + Arrays.toString(leapPlacementsInCurrentGame));
+                    averageLeapPlacementsInCurrentGame = gameAvgPlacementsStats.getAverage();
+                    LOGGER.info("Current Game Leap Average: " + averageLeapPlacementsInCurrentGame);
+                    updateCurrentLeapStats();
+                } else {
+                    LOGGER.info("No leap placement available yet for leap " + (i+1));
+                }
             }
+
         }
     }
 
@@ -138,22 +142,30 @@ public class ParkourWarriorSurvivor extends Game  {
 
     public void updateCurrentLeapStats() {
         if(timesPerLeap[currentLeap-1] != null){
+            LOGGER.info("Updated current leap stats for Leap " + currentLeap);
             DoubleSummaryStatistics stats = timesPerLeap[currentLeap-1].stream().mapToDouble(Double::doubleValue).summaryStatistics();
             currentLeapAverage = stats.getAverage();
             currentLeapBest = stats.getMin();
+        } else {
+            currentLeapAverage = 0;
+            currentLeapBest = 0;
         }
     }
 
     public int getLeapPlacementFromSidebar(int leapNum) {
 
         String leapRanksRows;
-        var scorboardOptional = ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance());
-        if(scorboardOptional.isEmpty())
+        var scoreboardOptional = ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance());
+        if(scoreboardOptional.isEmpty())
             return -1;
-        var scoreboard = scorboardOptional.get();
+        var scoreboard = scoreboardOptional.get();
+
+        var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
+        if(sidebarRows.size() < 2)
+            return -1;
 
         // Rank rows show in Index 1 of the sidebar.
-        leapRanksRows = ScoreboardUtil.getSidebarRows(scoreboard).get(1);
+        leapRanksRows = sidebarRows.get(1);
 
         Pattern pattern = Pattern.compile("\\d+");
         Matcher matcher = pattern.matcher(leapRanksRows);

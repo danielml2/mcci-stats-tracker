@@ -17,7 +17,6 @@ public class ScoreboardMixin {
     public void injectUpdateScoreboardTeam(CallbackInfo callbackInfo) {
         try {
             MCCIStats.onScoreboardUpdate();
-
         } catch (Exception e) {
             LOGGER.error("Failed: ", e);
         }

@@ -102,8 +102,8 @@ public class MCCIStats implements ModInitializer {
 
 				// Battle Box: Eliminations (Chat + Title), Personal Placement (Sidebar/Endgame chat), Team Placement (Endgame Chat/Sidebar), Game Over (Title & Chat), Team (Sidebar)
 				// Sky Battle: Personal Placement (Sidebar), Survivor Placement (Chat / Title), Eliminations (Chat & Title), Avg Team Placement (Chat / Title), Game over: chat
-				// TGTTOS: Avg Placement per Map (Chat/Subtitle), Avg Game Placement, Avg/Time per Map (Chat) Avg Placement per map IN THIS SPECIFIC GAME (Sidebar, Chat)
-				// PKWS: Avg Time for Leap / Map (Chat), Avg Placement (Title + Chat), Avg Placement per Leap (Sidebar)
+				// TGTTOS: Avg Placement per Map (Chat/Subtitle), Avg Game Placement, Avg/Time per Map (Chat) Avg Placement in the current game (Sidebar, Chat)
+				// DONE PKWS: Avg Time for Leap / Map (Chat), Avg Placement (Title + Chat), Avg Placement per Leap (Sidebar)
 				DebugScreen.logText(debugText.toString());
 			});
 		});

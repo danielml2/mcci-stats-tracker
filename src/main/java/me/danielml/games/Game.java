@@ -53,7 +53,7 @@ public abstract class Game {
         int minutes = (int) timeInSeconds / 60;
         double remainingSeconds = timeInSeconds % 60;
         String formattedMinutes = String.format("%02d", minutes);
-        String formattedSeconds = String.format("%.2f", remainingSeconds);
+        String formattedSeconds = String.format("%05.2f", remainingSeconds);
         return formattedMinutes + ":" + formattedSeconds;
     }
 }

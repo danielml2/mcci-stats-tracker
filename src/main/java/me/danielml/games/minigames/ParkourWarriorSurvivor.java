@@ -73,7 +73,7 @@ public class ParkourWarriorSurvivor extends Game  {
             double finalTimeInSeconds;
 
             int leapNumber = extractNumberFromText(messageContent.split("Leap")[1]);
-            playerCompletedLeaps = extractNumberFromText(messageContent.split("Leap")[1]);
+            playerCompletedLeaps = leapNumber;
 
             // Finished after time ran out
             if(playerCompletedLeaps < currentGameLeap) {
@@ -112,8 +112,9 @@ public class ParkourWarriorSurvivor extends Game  {
 
         } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[\uE075]")) {
             currentPlayerLeap = 1;
-            updateCurrentLeapStats();
             leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
+            currentGameLeap = 1;
+            updateCurrentLeapStats();
             eliminated = false;
 
         } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[\uE075]") && !eliminated) {
@@ -156,8 +157,8 @@ public class ParkourWarriorSurvivor extends Game  {
     @Override
     public String displayData() {
         return "Last Placement: " + lastPlacement + "\n " +
-                "Average Game Placement: " + ((int)averagePlacement) + "(" + twoDigitFormat.format(averagePlacement) + ") \n " +
-                "Average Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + "(" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
+                "Average Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n " +
+                "Average Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + " (" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
                 "Current Leap (" + currentPlayerLeap + ") Average Time: " + formatTime(currentLeapAverage) + " \n" +
                 "Current Leap (" + currentPlayerLeap + ") Best Time: " + formatTime(currentLeapBest);
     }

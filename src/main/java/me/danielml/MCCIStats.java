@@ -9,6 +9,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
+import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.scoreboard.Scoreboard;
@@ -49,6 +50,18 @@ public class MCCIStats implements ModInitializer {
 
 		HudRenderCallback.EVENT.register(new DebugScreen());
 
+		ClientSendMessageEvents.CHAT.register(message -> {
+			LOGGER.info("Sent chat message!");
+			ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent((scoreboard -> {
+				var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
+				int rowIndex = 0;
+				for(String row : sidebarRows) {
+					LOGGER.info(rowIndex + ": " + row);
+					rowIndex++;
+				}
+			}));
+		});
+
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 
 			String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
@@ -84,25 +97,14 @@ public class MCCIStats implements ModInitializer {
 				}
 
 
-				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n ");
+				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
-
-				debugText.append("\n Title: ").append(titleString);
-				debugText.append(" \n Subtitle:").append(subtitleString);
-				debugText.append("\n ");
-				var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-				int rowIndex = 0;
-				for(String row : sidebarRows) {
-					debugText.append(rowIndex).append(": ").append(row).append(" \n ");
-					rowIndex++;
-				}
-
 
 				// DONE Hole in the Wall: Placement, Top wall speed? (Row:), Average placement,  (Placement shows in subtitles, also players remaining on the sidebar)
 
 				// Battle Box: Eliminations (Chat + Title), Personal Placement (Sidebar/Endgame chat), Team Placement (Endgame Chat/Sidebar), Game Over (Title & Chat), Team (Sidebar)
 				// Sky Battle: Personal Placement (Sidebar), Survivor Placement (Chat / Title), Eliminations (Chat & Title), Avg Team Placement (Chat / Title), Game over: chat
-				// TGTTOS: Avg Placement per Map (Chat/Subtitle), Avg Game Placement, Avg/Time per Map (Chat) Avg Placement in the current game (Sidebar, Chat)
+				// DONE TGTTOS: Avg Placement per Map (Chat/Subtitle), Avg Game Placement, Avg/Time per Map (Chat) Avg Placement in the current game (Sidebar, Chat)
 				// DONE PKWS: Avg Time for Leap / Map (Chat), Avg Placement (Title + Chat), Avg Placement per Leap (Sidebar)
 				DebugScreen.logText(debugText.toString());
 			});
@@ -112,32 +114,7 @@ public class MCCIStats implements ModInitializer {
 		// Also scrap whenever the game ends? either that or through title screens
 		ClientReceiveMessageEvents.GAME.register((text, b) -> {
 			LOGGER.info("[GAME]" + text.getString() + "(" + b + ")");
-
-
-			// Death messages work both for HOTW & PKWS but still needs to split later for other stuff
-			// TODO: Get death/placement detection for the rest of the games, which probably won't be from chat
 			currentGame.onChatMessageInGame(text);
-
-			MinecraftClient client = MinecraftClient.getInstance();
-
-			Text title = ((TitleSubtitleMixin)client.inGameHud).getTitle();
-			Text subtitle = ((TitleSubtitleMixin)client.inGameHud).getSubtitle();
-
-			String titleString = title != null ? title.getString() : "None";
-			String subtitleString = subtitle != null ? subtitle.getString() : "None";
-
-//			LOGGER.info("Title: " + titleString);
-//			LOGGER.info("Subtitle: " + subtitleString);
-//
-//			// 
-//			ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent((scoreboard -> {
-//				var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-//				int rowIndex = 0;
-//				for(String row : sidebarRows) {
-//					LOGGER.info(rowIndex + ": " + row);
-//					rowIndex++;
-//				}
-//			}));
 		});
 	}
 
@@ -173,7 +150,7 @@ public class MCCIStats implements ModInitializer {
 		if(client != null)
 			ScoreboardUtil.getCurrentScoreboard(client).ifPresent(scoreboard -> {
 				var rows = ScoreboardUtil.getSidebarRows(scoreboard);
-				LOGGER.info("Sidebar update!");
+//				LOGGER.info("Sidebar update!");
 				currentGame.onSidebarUpdate(rows);
 			});
 	}

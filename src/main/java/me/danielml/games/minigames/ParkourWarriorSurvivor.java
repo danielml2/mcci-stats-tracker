@@ -159,7 +159,7 @@ public class ParkourWarriorSurvivor extends Game  {
         return "Last Placement: " + lastPlacement + "\n " +
                 "Average Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n " +
                 "Average Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + " (" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
-                "Current Leap (" + currentPlayerLeap + ") Average Time: " + formatTime(currentLeapAverage) + " \n" +
+                "Current Leap (" + currentPlayerLeap + ") Average Time: " + formatTime(currentLeapAverage) + "\n" +
                 "Current Leap (" + currentPlayerLeap + ") Best Time: " + formatTime(currentLeapBest);
     }
 

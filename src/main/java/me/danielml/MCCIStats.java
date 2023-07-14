@@ -4,7 +4,9 @@ import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
 import me.danielml.mixin.TitleSubtitleMixin;
 import me.danielml.screen.DebugScreen;
+import me.danielml.screen.StatsHUD;
 import me.danielml.util.ScoreboardUtil;
+import me.danielml.util.ToggleableLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -26,7 +28,7 @@ public class MCCIStats implements ModInitializer {
 	// This logger is used to write text to the console and the log file.
 	// It is considered best practice to use your mod id as the logger's name.
 	// That way, it's clear which mod wrote info, warnings, and errors.
-	public static final Logger LOGGER = LoggerFactory.getLogger("mcci-stats-tracker");
+	public static final ToggleableLogger LOGGER = new ToggleableLogger("mcci-stats-tracker");
 
 	private static final Game[] GAMES = new Game[]{
 			new HoleInTheWall(),
@@ -35,6 +37,8 @@ public class MCCIStats implements ModInitializer {
 			new TGTTOS(),
 			new BattleBox()
 	};
+
+	private final boolean DEBUG = false;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;
@@ -44,11 +48,14 @@ public class MCCIStats implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+		LOGGER.info("Logger enabled: " + DEBUG);
+		LOGGER.setEnabled(DEBUG);
 
-		HudRenderCallback.EVENT.register(new DebugScreen());
+		if(DEBUG)
+			HudRenderCallback.EVENT.register(new DebugScreen());
+		else
+			HudRenderCallback.EVENT.register(new StatsHUD());
+
 
 		ClientSendMessageEvents.CHAT.register(message -> {
 			LOGGER.info("Sent chat message!");
@@ -70,7 +77,6 @@ public class MCCIStats implements ModInitializer {
 
 			var scoreboardOptional = ScoreboardUtil.getCurrentScoreboard(minecraftClient);
 			scoreboardOptional.ifPresent(scoreboard -> {
-				// Add check for what game we're on, and if we're in game at all, or just at the lobby of said game
 
 				ScoreboardObjective objective = scoreboard.getObjectiveForSlot(Scoreboard.getDisplaySlotId("sidebar"));
 
@@ -100,18 +106,11 @@ public class MCCIStats implements ModInitializer {
 				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
 
-				// DONE Hole in the Wall: Placement, Top wall speed? (Row:), Average placement,  (Placement shows in subtitles, also players remaining on the sidebar)
-
-				// Battle Box: Eliminations (Chat + Title), Personal Placement (Sidebar/Endgame chat), Team Placement (Endgame Chat/Sidebar), Game Over (Title & Chat), Team (Sidebar)
-				// Sky Battle: Personal Placement (Sidebar), Survivor Placement (Chat / Title), Eliminations (Chat & Title), Avg Team Placement (Chat / Title), Game over: chat
-				// DONE TGTTOS: Avg Placement per Map (Chat/Subtitle), Avg Game Placement, Avg/Time per Map (Chat) Avg Placement in the current game (Sidebar, Chat)
-				// DONE PKWS: Avg Time for Leap / Map (Chat), Avg Placement (Title + Chat), Avg Placement per Leap (Sidebar)
+				StatsHUD.setStatsDisplay(currentGame.displayData());
 				DebugScreen.logText(debugText.toString());
 			});
 		});
 
-		// Add scraping kills of our own using a regex or something based on the game
-		// Also scrap whenever the game ends? either that or through title screens
 		ClientReceiveMessageEvents.GAME.register((text, b) -> {
 			LOGGER.info("[GAME]" + text.getString() + "(" + b + ")");
 			currentGame.onChatMessageInGame(text);
@@ -150,7 +149,6 @@ public class MCCIStats implements ModInitializer {
 		if(client != null)
 			ScoreboardUtil.getCurrentScoreboard(client).ifPresent(scoreboard -> {
 				var rows = ScoreboardUtil.getSidebarRows(scoreboard);
-//				LOGGER.info("Sidebar update!");
 				currentGame.onSidebarUpdate(rows);
 			});
 	}

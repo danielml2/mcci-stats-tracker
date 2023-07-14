@@ -57,7 +57,7 @@ public class HoleInTheWall extends Game {
     @Override
     public String displayData() {
         return "Last Placement: " + lastPlacement + "\n " +
-                "Average Placement: " + ((int)averagePlacement) + "(" + twoDigitFormat.format(averagePlacement) + ") \n " +
+                "Avg. Placement " + ((int)averagePlacement) + "(" + twoDigitFormat.format(averagePlacement) + ") \n " +
                 "Top Wall Speed: " + topWallSpeedSurvived;
     }
 

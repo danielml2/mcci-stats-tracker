@@ -112,9 +112,9 @@ public class SkyBattle extends Game {
     @Override
     public String displayData() {
         return "Latest placements for Survivor: " + lastSurvivorPlacement + " Team: " + lastTeamPlacement + " Personal: " + lastPersonalPlacement + " \n" +
-                "Average Survivor Placement: " + twoDigitFormat.format(averageSurvivorPlacement) +
-                " Average Personal Placement: " + twoDigitFormat.format(averagePersonalPlacement) + " \n"
-                + "Average Team placement: " + twoDigitFormat.format(averageTeamPlacement) + " \n" +
+                "Avg. Survivor Placement " + twoDigitFormat.format(averageSurvivorPlacement) + " \n" +
+                "Avg. Personal Placement: " + twoDigitFormat.format(averagePersonalPlacement) + " \n"
+                + "Avg. Team placement: " + twoDigitFormat.format(averageTeamPlacement) + " \n" +
                 "KDR: " + twoDigitFormat.format(kdr) + " (Kills: " + kills + " Deaths: " + deaths + ")";
 
     }

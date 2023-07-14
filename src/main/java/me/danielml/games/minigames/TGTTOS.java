@@ -124,9 +124,9 @@ public class TGTTOS extends Game {
     @Override
     public String displayData() {
         return "Last game placement: " + lastPlacement + "\n" +
-                "Average game placement: " + twoDigitFormat.format(gamePlacementAverage) + " \n" +
-                "Average round placement (Overall): " + twoDigitFormat.format(roundAveragePlacements) + " \n"  +
-                "Best time for current map (" + currentMap + "): " + formatTime(bestCurrentMapTime);
+                "Avg. game placement: " + twoDigitFormat.format(gamePlacementAverage) + " \n" +
+                "Avg. round placement (Overall): " + twoDigitFormat.format(roundAveragePlacements) + " \n"  +
+                "Best time for " + currentMap + ": " + formatTime(bestCurrentMapTime);
     }
 
     public String capitalizeString(String text) {

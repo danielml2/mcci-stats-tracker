@@ -114,8 +114,8 @@ public class BattleBox extends Game {
     @Override
     public String displayData() {
         return "Last placements - Team: " + lastTeamPlacement + " Personal: " + lastPersonalPlacement + " \n" +
-                "Average Personal Placement: " + twoDigitFormat.format(averagePersonalPlacement) + " \n" +
-                "Average Team Placement: " +  twoDigitFormat.format(averageTeamPlacement) + " \n" +
+                "Avg. Personal Placement: " + twoDigitFormat.format(averagePersonalPlacement) + " \n" +
+                "Avg. Team Placement: " +  twoDigitFormat.format(averageTeamPlacement) + " \n" +
                 "KDR (Kill/Death Ratio): " + twoDigitFormat.format(kdr) + " (Kills: " + kills + " Deaths: " + deaths + ") \n" +
                 "Round WLR (Win/Loss Ratio): " + twoDigitFormat.format(roundWLR) + " (Round wins: " + roundWins + " Losses: " + roundLosses + ")";
     }

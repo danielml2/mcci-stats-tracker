@@ -59,14 +59,15 @@ public class MCCIStats implements ModInitializer {
 
 		ClientSendMessageEvents.CHAT.register(message -> {
 			LOGGER.info("Sent chat message!");
-			ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent((scoreboard -> {
+			if(DEBUG)
+				ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent((scoreboard -> {
 				var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
 				int rowIndex = 0;
 				for(String row : sidebarRows) {
 					LOGGER.info(rowIndex + ": " + row);
 					rowIndex++;
 				}
-			}));
+				}));
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
@@ -103,10 +104,11 @@ public class MCCIStats implements ModInitializer {
 				}
 
 
-				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
+				StringBuilder debugText = new StringBuilder("\n\n Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
 
-				StatsHUD.setStatsDisplay(currentGame.displayData());
+				// Temporary fix for it interfering with the MCCI top GUI, later there would be an option to change the location on the screen completely.
+				StatsHUD.setStatsDisplay("\n\n" + currentGame.displayData());
 				DebugScreen.logText(debugText.toString());
 			});
 		});

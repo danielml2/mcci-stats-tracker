@@ -7,7 +7,6 @@ import net.minecraft.text.Text;
 import static me.danielml.MCCIStats.LOGGER;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.DoubleSummaryStatistics;
 
 public class HoleInTheWall extends Game {
@@ -58,7 +57,7 @@ public class HoleInTheWall extends Game {
     @Override
     public String displayData() {
         return "Last Placement: " + lastPlacement + "\n " +
-                "Average Placement: " + ((int)averagePlacement) + "( " + twoDigitFormat.format(averagePlacement) + ") \n " +
+                "Average Placement: " + ((int)averagePlacement) + "(" + twoDigitFormat.format(averagePlacement) + ") \n " +
                 "Top Wall Speed: " + topWallSpeedSurvived;
     }
 

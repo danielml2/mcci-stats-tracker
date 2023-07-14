@@ -111,12 +111,14 @@ public class ParkourWarriorSurvivor extends Game  {
             updateCurrentLeapStats();
 
         } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[\uE075]")) {
+            LOGGER.info("Reset screen for start of game!");
             currentPlayerLeap = 1;
             leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
+            averageLeapPlacementsInCurrentGame = 0;
+            playerCompletedLeaps = 1;
             currentGameLeap = 1;
-            updateCurrentLeapStats();
             eliminated = false;
-
+            updateCurrentLeapStats();
         } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[\uE075]") && !eliminated) {
             currentPlayerLeap = extractNumberFromText(messageContent.split("Leap")[1]);
             LOGGER.info("Leap " + currentPlayerLeap + " started!");
@@ -134,33 +136,34 @@ public class ParkourWarriorSurvivor extends Game  {
 
     @Override
     public void onSidebarUpdate(List<String> sidebarRows) {
-        for(int i = 0; i < playerCompletedLeaps; i++) {
-            if(leapPlacementsInCurrentGame[i] == -1) {
-                int placement = getLeapPlacementFromSidebar(i+1);
-                if(placement != -1)
-                {
-                    LOGGER.info("Found placement for leap " + (i+1) + "!");
-                    leapPlacementsInCurrentGame[i] = placement;
-                    var gameAvgPlacementsStats = Arrays.stream(leapPlacementsInCurrentGame).filter(p -> p != -1).summaryStatistics();
-                    LOGGER.info("Current Game Leap Placements Array: " + Arrays.toString(leapPlacementsInCurrentGame));
-                    averageLeapPlacementsInCurrentGame = gameAvgPlacementsStats.getAverage();
-                    LOGGER.info("Current Game Leap Placements Average: " + averageLeapPlacementsInCurrentGame);
-                    updateCurrentLeapStats();
-                } else {
-                    LOGGER.info("No leap placement available yet for leap " + (i+1));
+        if(!eliminated)
+            for(int i = 0; i < playerCompletedLeaps; i++) {
+                if(leapPlacementsInCurrentGame[i] == -1) {
+                    int placement = getLeapPlacementFromSidebar(i+1);
+                    if(placement != -1)
+                    {
+                        LOGGER.info("Found placement for leap " + (i+1) + "!");
+                        leapPlacementsInCurrentGame[i] = placement;
+                        var gameAvgPlacementsStats = Arrays.stream(leapPlacementsInCurrentGame).filter(p -> p != -1).summaryStatistics();
+                        LOGGER.info("Current Game Leap Placements Array: " + Arrays.toString(leapPlacementsInCurrentGame));
+                        averageLeapPlacementsInCurrentGame = gameAvgPlacementsStats.getAverage();
+                        LOGGER.info("Current Game Leap Placements Average: " + averageLeapPlacementsInCurrentGame);
+                        updateCurrentLeapStats();
+                    } else {
+                        LOGGER.info("No leap placement available yet for leap " + (i+1));
+                    }
                 }
-            }
 
-        }
+            }
     }
 
     @Override
     public String displayData() {
         return "Last Placement: " + lastPlacement + "\n " +
-                "Average Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n " +
-                "Average Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + " (" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
-                "Current Leap (" + currentPlayerLeap + ") Average Time: " + formatTime(currentLeapAverage) + "\n" +
-                "Current Leap (" + currentPlayerLeap + ") Best Time: " + formatTime(currentLeapBest);
+                "Avg. Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n " +
+                "Avg. Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + " (" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
+                "Leap (" + currentPlayerLeap + ") Avg. Time: " + formatTime(currentLeapAverage) + "\n" +
+                "Leap (" + currentPlayerLeap + ") Best Time: " + formatTime(currentLeapBest);
     }
 
     @Override

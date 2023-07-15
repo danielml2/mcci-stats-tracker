@@ -64,6 +64,7 @@ public class ParkourWarriorSurvivor extends Game  {
             int leapNumber = extractNumberFromText(messageContent.split("Leap")[1]);
             playerCompletedLeaps = leapNumber;
 
+
             // Finished after time ran out
             if(playerCompletedLeaps < currentGameLeap) {
                 unfinishedLeapTime = System.currentTimeMillis() - unfinishedLeapTime;
@@ -94,6 +95,14 @@ public class ParkourWarriorSurvivor extends Game  {
                 timesPerLeap[leapNumber-1].add(finalTimeInSeconds);
             }
 
+            if(leapNumber == 8)
+            {
+                lastPlacement = 1;
+                lastPlacements.add(lastPlacement);
+                DoubleSummaryStatistics stats = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics();
+                averagePlacement = stats.getAverage();
+                LOGGER.info("Won the game!");
+            }
 
             LOGGER.info("Leap " + leapNumber + " ended at: " + finalTimeInSeconds + " seconds");
             LOGGER.info("Formatted leap time: " + formatTime(finalTimeInSeconds));

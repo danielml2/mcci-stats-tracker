@@ -104,6 +104,12 @@ public class SkyBattle extends Game {
                         startingPlayerAmount = extractNumberFromText(playersText.split(":")[1]);
                     }
                 });
+            } else if(messageContent.startsWith("[") && messageContent.contains("you survived")) {
+                lastTeamPlacement = 1;
+                teamPlacements.add(lastTeamPlacement);
+                lastSurvivorPlacement = 1;
+                survivorPlacements.add(lastSurvivorPlacement);
+                averageTeamPlacement = teamPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
             }
         }
         super.onChatMessageInGame(messageText);

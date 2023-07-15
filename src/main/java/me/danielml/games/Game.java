@@ -24,9 +24,7 @@ public abstract class Game {
 
     public void onTitleChange(String title) {}
 
-    public void onSubtitleChange(String subtitle) {
-
-    }
+    public void onSubtitleChange(String subtitle) {}
 
     public void onSidebarUpdate(List<String> sidebarRows) {}
     public final void saveData() {

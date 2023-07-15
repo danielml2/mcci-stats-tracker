@@ -150,6 +150,9 @@ public class TGTTOS extends Game {
         this.lastPlacements = gson.fromJson(jsonObject.get("placements"), integerlist);
         this.lastPlacement = jsonObject.get("last_placement").getAsInt();
         this.bestMapTimes = gson.fromJson(jsonObject.get("best_map_times").getAsString(), hashmapType);
+
+        this.roundAveragePlacements = lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+        this.gamePlacementAverage = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
     }
 
     @Override

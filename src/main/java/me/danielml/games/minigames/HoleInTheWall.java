@@ -85,6 +85,7 @@ public class HoleInTheWall extends Game {
         var listType = new TypeToken<ArrayList<Integer>>() {}.getType();
         this.lastPlacements = gson.fromJson(jsonObject.get("placements"), listType);
         this.topWallSpeedSurvived = jsonObject.get("top_wall_speed").getAsInt();
+        averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
     }
 
     @Override
@@ -93,5 +94,6 @@ public class HoleInTheWall extends Game {
         averagePlacement = 0;
         topWallSpeedSurvived = 0;
         lastPlacements = new ArrayList<>();
+
     }
 }

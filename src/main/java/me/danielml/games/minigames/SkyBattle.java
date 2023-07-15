@@ -169,6 +169,10 @@ public class SkyBattle extends Game {
         this.personalPlacements = gson.fromJson(jsonObject.get("personal_placements"), type);
         this.survivorPlacements = gson.fromJson(jsonObject.get("survivor_placements"), type);
         this.teamPlacements = gson.fromJson(jsonObject.get("team_placements"), type);
+
+        this.averagePersonalPlacement = personalPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+        this.averageTeamPlacement = teamPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+        this.averageSurvivorPlacement = survivorPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
     }
 
     @Override

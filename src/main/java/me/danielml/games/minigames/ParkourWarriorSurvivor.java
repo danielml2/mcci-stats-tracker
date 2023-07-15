@@ -282,5 +282,6 @@ public class ParkourWarriorSurvivor extends Game  {
         this.timesPerLeap = gson.fromJson(jsonObject.get("leap_times"), leapTimesType);
         this.lastPlacements = gson.fromJson(jsonObject.get("placements"), placementsType);
         this.lastPlacement = jsonObject.get("last_placement").getAsInt();
+        averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
     }
 }

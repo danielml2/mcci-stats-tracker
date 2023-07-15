@@ -164,6 +164,9 @@ public class BattleBox extends Game {
         var type = new TypeToken<ArrayList<Integer>>(){}.getType();
         this.personalPlacements = gson.fromJson(jsonObject.get("personal_placements"), type);
         this.teamPlacements = gson.fromJson(jsonObject.get("team_placements"), type);
+
+        this.averagePersonalPlacement = personalPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+        this.averageTeamPlacement = teamPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
     }
 
     @Override

@@ -14,9 +14,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.scoreboard.Scoreboard;
 
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -59,6 +61,10 @@ public class MCCIStats implements ModInitializer {
 		else
 			HudRenderCallback.EVENT.register(new StatsHUD());
 
+		ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, minecraftClient) -> {
+			LOGGER.info("Disconnected from the server!");
+			currentGame.saveData();
+		});
 
 		ClientSendMessageEvents.CHAT.register(message -> {
 			LOGGER.info("Sent chat message!");

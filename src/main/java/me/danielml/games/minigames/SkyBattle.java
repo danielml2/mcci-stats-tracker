@@ -1,5 +1,6 @@
 package me.danielml.games.minigames;
 
+import com.google.gson.JsonObject;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
@@ -116,6 +117,21 @@ public class SkyBattle extends Game {
                 "Avg. Personal Placement: " + twoDigitFormat.format(averagePersonalPlacement) + " \n"
                 + "Avg. Team placement: " + twoDigitFormat.format(averageTeamPlacement) + " \n" +
                 "KDR: " + twoDigitFormat.format(kdr) + " (Kills: " + kills + " Deaths: " + deaths + ")";
+
+    }
+
+    @Override
+    public void loadFailSafeDefaultData() {
+
+    }
+
+    @Override
+    public JsonObject serializeData() {
+        return new JsonObject();
+    }
+
+    @Override
+    public void deserializeData(JsonObject jsonObject) {
 
     }
 

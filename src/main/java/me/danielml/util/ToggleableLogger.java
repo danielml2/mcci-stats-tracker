@@ -36,6 +36,9 @@ public class ToggleableLogger {
             logger.error(message, exception);
     }
 
+    public void forceError(String message, Exception e) {
+        logger.error(message, e);
+    }
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }

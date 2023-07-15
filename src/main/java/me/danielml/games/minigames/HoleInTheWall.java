@@ -1,5 +1,9 @@
 package me.danielml.games.minigames;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
@@ -21,11 +25,6 @@ public class HoleInTheWall extends Game {
         averagePlacement = 0;
         topWallSpeedSurvived = 0;
         lastPlacements = new ArrayList<>();
-    }
-
-    @Override
-    public void loadData() {
-
     }
 
     @Override
@@ -66,5 +65,33 @@ public class HoleInTheWall extends Game {
         return "HOLE IN THE WALL";
     }
 
+    @Override
+    public JsonObject serializeData() {
+        Gson gson = new Gson();
+        JsonObject object = new JsonObject();
 
+        object.addProperty("last_placement", lastPlacement);
+        var placementsJSON = gson.toJsonTree(lastPlacements).getAsJsonArray();
+        object.add("placements", placementsJSON);
+        object.addProperty("top_wall_speed", topWallSpeedSurvived);
+
+        return object;
+    }
+
+    @Override
+    public void deserializeData(JsonObject jsonObject) {
+        Gson gson = new Gson();
+        this.lastPlacement = jsonObject.get("last_placement").getAsInt();
+        var listType = new TypeToken<ArrayList<Integer>>() {}.getType();
+        this.lastPlacements = gson.fromJson(jsonObject.get("placements"), listType);
+        this.topWallSpeedSurvived = jsonObject.get("top_wall_speed").getAsInt();
+    }
+
+    @Override
+    public void loadFailSafeDefaultData() {
+        lastPlacement = 0;
+        averagePlacement = 0;
+        topWallSpeedSurvived = 0;
+        lastPlacements = new ArrayList<>();
+    }
 }

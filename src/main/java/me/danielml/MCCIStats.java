@@ -1,5 +1,7 @@
 package me.danielml;
 
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonWriter;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
 import me.danielml.mixin.TitleSubtitleMixin;
@@ -13,6 +15,7 @@ import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.scoreboard.Scoreboard;
 
@@ -38,7 +41,7 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	private final boolean DEBUG = false;
+	private final boolean DEBUG = true;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;
@@ -120,18 +123,21 @@ public class MCCIStats implements ModInitializer {
 	}
 
 	public void detectMode(ScoreboardObjective objective) {
-
+		FabricLoader.getInstance().getGameDir();
 		var objectiveDisplayName = objective.getDisplayName();
 		if(objectiveDisplayName.getSiblings().size() < 3) {
 			if(!(currentGame instanceof None))
 				LOGGER.info("Back to the lobby!");
+			currentGame.saveData();
 			currentGame = NONE;
 			return;
 		}
 		// For some reason, the title of the game while IN GAME shows only on the 3rd sibling of the text, in lobby's it shows on the 2nd one, no idea why
 		var gameTitle = objectiveDisplayName.getSiblings().get(2).getString();
 		if(currentGame != getGameFromIdentifier(gameTitle)) {
+			currentGame.saveData();
 			currentGame = getGameFromIdentifier(gameTitle);
+			currentGame.loadData();
 			LOGGER.info("Game Played Currently: " + gameTitle);
 		}
 	}
@@ -143,6 +149,10 @@ public class MCCIStats implements ModInitializer {
 				.findFirst();
 
 		return optional.orElse(NONE);
+	}
+
+	public void saveGameData() {
+
 	}
 
 	public static void onScoreboardUpdate() {

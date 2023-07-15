@@ -1,5 +1,8 @@
 package me.danielml.games.minigames;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.sun.jna.platform.win32.OaIdl;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
@@ -33,20 +36,6 @@ public class ParkourWarriorSurvivor extends Game  {
     private double currentLeapAverage, currentLeapBest;
     private boolean eliminated = false;
 
-    public ParkourWarriorSurvivor() {
-        lastPlacement = 0;
-        averagePlacement = 0;
-        lastPlacements = new ArrayList<>();
-        this.averageLeapPlacementsInCurrentGame = 0;
-        this.leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
-        this.timesPerLeap = new ArrayList[8];
-        this.currentLeapBest = 0;
-    }
-
-    @Override
-    public void loadData() {
-
-    }
 
     @Override
     public void onChatMessageInGame(Text messageText) {
@@ -158,6 +147,21 @@ public class ParkourWarriorSurvivor extends Game  {
     }
 
     @Override
+    public void onTitleChange(String title) {
+        if(title.contains("Leap 1")) {
+            // Extra reset just in case it forgets for some reason and the standby message doesn't work for some reason
+            LOGGER.info("Reset screen from title!");
+            currentPlayerLeap = 1;
+            leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
+            averageLeapPlacementsInCurrentGame = 0;
+            playerCompletedLeaps = 1;
+            currentGameLeap = 1;
+            eliminated = false;
+            updateCurrentLeapStats();
+        }
+    }
+
+    @Override
     public String displayData() {
         return "Last Placement: " + lastPlacement + "\n " +
                 "Avg. Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n " +
@@ -209,4 +213,35 @@ public class ParkourWarriorSurvivor extends Game  {
         return Integer.parseInt(results[leapNum-1]);
     }
 
+    @Override
+    public void loadFailSafeDefaultData() {
+        lastPlacements = new ArrayList<>();
+        this.timesPerLeap = new ArrayList[8];
+        this.lastPlacement = 0;
+    }
+
+    @Override
+    public JsonObject serializeData() {
+        Gson gson = new Gson();
+        JsonObject jsonObject = new JsonObject();
+
+        var timesJSON = gson.toJsonTree(timesPerLeap).getAsJsonArray();
+        var placementsJSON = gson.toJsonTree(lastPlacements).getAsJsonArray();
+        jsonObject.add("leap_times", timesJSON);
+        jsonObject.add("placements", placementsJSON);
+        jsonObject.addProperty("last_placement", lastPlacement);
+
+        return jsonObject;
+    }
+
+    @Override
+    public void deserializeData(JsonObject jsonObject) {
+        Gson gson = new Gson();
+        var leapTimesType = new TypeToken<ArrayList<Double>[]>() {}.getType();
+        var placementsType = new TypeToken<ArrayList<Integer>>() {}.getType();
+
+        this.timesPerLeap = gson.fromJson(jsonObject.get("leap_times"), leapTimesType);
+        this.lastPlacements = gson.fromJson(jsonObject.get("placements"), placementsType);
+        this.lastPlacement = jsonObject.get("last_placement").getAsInt();
+    }
 }

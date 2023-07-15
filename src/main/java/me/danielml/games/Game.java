@@ -2,8 +2,15 @@ package me.danielml.games;
 
 
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.text.Text;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -22,10 +29,53 @@ public abstract class Game {
     }
 
     public void onSidebarUpdate(List<String> sidebarRows) {}
-    public void saveData() {}
+    public final void saveData() {
+        if(getSidebarIdentifier().equalsIgnoreCase("None"))
+            return;
 
-    public void loadData() {}
+        File statsFolder = new File(FabricLoader.getInstance().getGameDir().toString() + "/mcci-stats");
+        String fileName = getSidebarIdentifier().replaceAll(" ", "_").toLowerCase() + ".json";
+
+        File file = new File(statsFolder.getAbsolutePath() + "/" + fileName);
+        try {
+            if(!file.exists()) {
+                statsFolder.mkdir();
+                file.createNewFile();
+            }
+
+            JsonObject object = serializeData();
+            var fileWriter = new FileWriter(file);
+            new Gson().toJson(object, fileWriter);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (Exception e) {
+            LOGGER.forceError("Failed to save data for " + fileName, e);
+        }
+
+    }
+
+    public final void loadData() {
+        File statsFolder = new File(FabricLoader.getInstance().getGameDir().toString() + "/mcci-stats");
+        String fileName = getSidebarIdentifier().replaceAll(" ", "_").toLowerCase() + ".json";
+
+        File file = new File(statsFolder.getAbsolutePath() + "/" + fileName);
+        try {
+            if(!file.exists()) {
+                loadFailSafeDefaultData();
+            } else {
+                var jsonObject = JsonParser.parseReader(new FileReader(file)).getAsJsonObject();
+                deserializeData(jsonObject);
+            }
+        } catch (Exception e) {
+            LOGGER.forceError("Failed to save data for " + fileName, e);
+            loadFailSafeDefaultData();
+        }
+    }
     public abstract String displayData();
+    public abstract JsonObject serializeData();
+    public abstract void deserializeData(JsonObject jsonObject);
+
+    public abstract void loadFailSafeDefaultData();
 
     public abstract String getSidebarIdentifier();
 

@@ -1,5 +1,6 @@
 package me.danielml.games.minigames;
 
+import com.google.gson.JsonObject;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
@@ -118,6 +119,21 @@ public class BattleBox extends Game {
                 "Avg. Team Placement: " +  twoDigitFormat.format(averageTeamPlacement) + " \n" +
                 "KDR (Kill/Death Ratio): " + twoDigitFormat.format(kdr) + " (Kills: " + kills + " Deaths: " + deaths + ") \n" +
                 "Round WLR (Win/Loss Ratio): " + twoDigitFormat.format(roundWLR) + " (Round wins: " + roundWins + " Losses: " + roundLosses + ")";
+    }
+
+    @Override
+    public void loadFailSafeDefaultData() {
+
+    }
+
+    @Override
+    public JsonObject serializeData() {
+        return new JsonObject();
+    }
+
+    @Override
+    public void deserializeData(JsonObject jsonObject) {
+
     }
 
     @Override

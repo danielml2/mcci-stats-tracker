@@ -1,5 +1,8 @@
 package me.danielml.games.minigames;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
@@ -28,17 +31,6 @@ public class TGTTOS extends Game {
     private long roundTime;
     private String currentMap;
     private double bestCurrentMapTime;
-
-    public TGTTOS() {
-        this.lastPlacement = 0;
-        this.lastPlacements = new ArrayList<>();
-        this.lastRoundPlacements = new ArrayList<>();
-        bestMapTimes = new HashMap<>();
-
-        this.gamePlacementAverage = 0;
-        this.roundAveragePlacements = 0;
-        this.currentMap = "";
-    }
 
     @Override
     public void onChatMessageInGame(Text messageText) {
@@ -102,7 +94,7 @@ public class TGTTOS extends Game {
 
     @Override
     public void onTitleChange(String title) {
-        if(title.contains("Round")) {
+        if(title.contains("Round") || title.contains("TGTTOS")) {
             ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                 var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
@@ -110,6 +102,8 @@ public class TGTTOS extends Game {
                     String mapString = sidebarRows.get(0);
                     currentMap = mapString.split("MAP: ")[1];
                     currentMap = capitalizeString(currentMap);
+                    gamePlacementAverage = this.lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+                    roundAveragePlacements = this.lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
                     LOGGER.info("Current map: " + currentMap);
                     updateMapBestTime();
                 }
@@ -136,6 +130,39 @@ public class TGTTOS extends Game {
             String restOfWord = word.substring(1);
             return Character.toUpperCase(word.charAt(0)) + restOfWord.toLowerCase();
         }).collect(Collectors.joining(" "));
+    }
+
+    @Override
+    public void loadFailSafeDefaultData() {
+        this.lastRoundPlacements = new ArrayList<>();
+        this.lastPlacements = new ArrayList<>();
+        this.bestMapTimes = new HashMap<>();
+        this.lastPlacement = 0;
+    }
+
+    @Override
+    public void deserializeData(JsonObject jsonObject) {
+
+        Gson gson = new Gson();
+        var hashmapType = new TypeToken<HashMap<String, Double>>(){}.getType();
+        var integerlist = new TypeToken<ArrayList<Integer>>(){}.getType();
+        this.lastRoundPlacements = gson.fromJson(jsonObject.get("round_placements"), integerlist);
+        this.lastPlacements = gson.fromJson(jsonObject.get("placements"), integerlist);
+        this.lastPlacement = jsonObject.get("last_placement").getAsInt();
+        this.bestMapTimes = gson.fromJson(jsonObject.get("best_map_times").getAsString(), hashmapType);
+    }
+
+    @Override
+    public JsonObject serializeData() {
+        JsonObject jsonObject = new JsonObject();
+        Gson gson = new Gson();
+
+        var hashmapType = new TypeToken<HashMap<String, Double>>(){}.getType();
+        jsonObject.addProperty("best_map_times", gson.toJson(bestMapTimes, hashmapType));
+        jsonObject.add("round_placements", gson.toJsonTree(lastRoundPlacements).getAsJsonArray());
+        jsonObject.add("placements", gson.toJsonTree(lastPlacements).getAsJsonArray());
+        jsonObject.addProperty("last_placement", lastPlacement);
+        return jsonObject;
     }
 
     @Override

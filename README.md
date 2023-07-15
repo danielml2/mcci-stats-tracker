@@ -3,9 +3,17 @@
 <br />
  MCCI Stats Tracker 
  </h1>
+ 
+ ![ci](https://github.com/danielml2/mcci-stats-tracker/actions/workflows/build.yml/badge.svg)
+
 A minecraft fabric mod, that uses game features to track your stats in those games.
 
-**NOTE: As of this early version, the stats won't save after you quit, and configuration is a bit limited. Will be improving later on**
+**NOTE: As of this early version, there isn't any configuration, Will be improving & adding later on**
+
+* [What stats are being tracked for ___?](#what-stats-are-being-tracked-for)
+* [Screenshots](#screenshots)
+* [Future Plans? / TODO](#future-plans--todo)
+* [Are my stats local?](#are-my-stats-local)
 
 Currently, the mod tracks every game but the Dojo, especially because it's a solo mode so it's lower priority.
 Realistically, this mod will become irrelevant the moment Noxcrew releases an actual stats viewer, but I thought I'd still try and make something that works for now. plus there might be a use for this to track stats that Noxcrew may not track/show on the theoretic future stats viewer.
@@ -22,4 +30,23 @@ Here's a full list of what stats are being tracked for each game.
 | Hole In The Wall | Last & Average Game Placement, Top Wall Speed survived, 
 
 ## Are my stats local?
-Yes! And always will be. In the future, it will save for you to view on a file, but currently the data dissapears after you close the game.
+Yes! (technically, MCC still collects some of that data) but all of the data from this mod is saved locally only, you can find the stats in the mcci-stats folder of the minecraft directory (.minecraft)
+
+## Screenshots
+![Battle Box](screenshots/battle%20box.png)
+*I'm not great at pvp games but I try.*
+![Sky Battle](screenshots/skybattle.png)
+![PKWS](screenshots/pkws.png)
+*Parkour Warrior Survivor is more my jam though.*
+![PKWS Average](screenshots/pkws%20average.png)
+*Wow it works!*
+![TGTTOS](screenshots/tgttos.png)
+![HOTW](screenshots/hotw.png)
+
+## Future Plans / TODO
+- [x] Tracking & Detection of all games's stats 
+- [x] Saved stats to JSON files locally
+- [ ] Configuration of UI placement, colors & size
+- [ ] Messages / Pop-ups for improvements / worsens of stats (Average going down/up)
+- [ ] Internal/External Graph viewer to show stats change over time?
+- [ ] OBS Overlay Integration?

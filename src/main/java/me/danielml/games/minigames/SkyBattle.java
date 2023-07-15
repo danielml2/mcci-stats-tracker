@@ -1,10 +1,13 @@
 package me.danielml.games.minigames;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
+import org.objectweb.asm.TypeReference;
 
 import java.util.ArrayList;
 import static me.danielml.MCCIStats.LOGGER;
@@ -24,19 +27,6 @@ public class SkyBattle extends Game {
     private double averageSurvivorPlacement, averageTeamPlacement, averagePersonalPlacement;
     private double kdr;
     private int startingPlayerAmount;
-
-    public SkyBattle() {
-        this.averageSurvivorPlacement = 0;
-        this.averageTeamPlacement = 0;
-        this.averagePersonalPlacement = 0;
-        this.kills = 0;
-        this.deaths = 0;
-        this.kdr = 0;
-
-        this.personalPlacements = new ArrayList<>();
-        this.teamPlacements = new ArrayList<>();
-        this.survivorPlacements = new ArrayList<>();
-    }
 
     @Override
     public void onChatMessageInGame(Text messageText) {
@@ -128,17 +118,56 @@ public class SkyBattle extends Game {
 
     @Override
     public void loadFailSafeDefaultData() {
-
+        this.kills = 0;
+        this.deaths = 0;
+        this.kdr = 0;
+        this.teamPlacements = new ArrayList<>();
+        this.survivorPlacements = new ArrayList<>();
+        this.personalPlacements = new ArrayList<>();
+        this.lastTeamPlacement = 0;
+        this.lastPersonalPlacement = 0;
+        this.lastSurvivorPlacement= 0;
     }
 
     @Override
     public JsonObject serializeData() {
-        return new JsonObject();
+        JsonObject jsonObject = new JsonObject();
+
+        Gson gson = new Gson();
+
+        jsonObject.addProperty("kills", kills);
+        jsonObject.addProperty("deaths", deaths);
+        jsonObject.addProperty("kdr", kdr);
+        jsonObject.addProperty("last_survivor_placement", lastSurvivorPlacement);
+        jsonObject.addProperty("last_team_placement", lastTeamPlacement);
+        jsonObject.addProperty("last_personal_placement", lastPersonalPlacement);
+
+        var survivorPlacementsJSON = gson.toJsonTree(survivorPlacements).getAsJsonArray();
+        jsonObject.add("survivor_placements", survivorPlacementsJSON);
+        var personalPlacementsJSON = gson.toJsonTree(personalPlacements).getAsJsonArray();
+        jsonObject.add("personal_placements", personalPlacementsJSON);
+        var teamPlacementsJSON = gson.toJsonTree(teamPlacements).getAsJsonArray();
+        jsonObject.add("team_placements", teamPlacementsJSON);
+
+        return jsonObject;
     }
 
     @Override
     public void deserializeData(JsonObject jsonObject) {
 
+        Gson gson = new Gson();
+
+        this.kills = jsonObject.get("kills").getAsInt();
+        this.deaths = jsonObject.get("deaths").getAsInt();
+        this.kdr = jsonObject.get("kdr").getAsDouble();
+        this.lastSurvivorPlacement = jsonObject.get("last_survivor_placement").getAsInt();
+        this.lastPersonalPlacement = jsonObject.get("last_personal_placement").getAsInt();
+        this.lastTeamPlacement = jsonObject.get("last_team_placement").getAsInt();
+
+        var type = new TypeToken<ArrayList<Integer>>(){}.getType();
+        this.personalPlacements = gson.fromJson(jsonObject.get("personal_placements"), type);
+        this.survivorPlacements = gson.fromJson(jsonObject.get("survivor_placements"), type);
+        this.teamPlacements = gson.fromJson(jsonObject.get("team_placements"), type);
     }
 
     @Override

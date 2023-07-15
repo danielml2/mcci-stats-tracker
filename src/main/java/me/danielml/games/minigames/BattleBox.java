@@ -1,5 +1,7 @@
 package me.danielml.games.minigames;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
@@ -24,19 +26,6 @@ public class BattleBox extends Game {
     private double roundWLR, averagePersonalPlacement, averageTeamPlacement;
     private double kdr;
 
-    public BattleBox() {
-        this.kills = 0;
-        this.deaths = 0;
-        this.roundWins = 0;
-        this.roundWLR = 0;
-        this.averageTeamPlacement = 0;
-        this.averagePersonalPlacement = 0;
-        this.kdr = 0;
-        this.personalPlacements = new ArrayList<>();
-        this.teamPlacements = new ArrayList<>();
-        this.lastTeamPlacement = 0;
-        this.lastPersonalPlacement = 0;
-    }
     @Override
     public void onChatMessageInGame(Text messageText) {
 
@@ -123,17 +112,58 @@ public class BattleBox extends Game {
 
     @Override
     public void loadFailSafeDefaultData() {
-
+        this.kills = 0;
+        this.deaths = 0;
+        this.roundWins = 0;
+        this.roundLosses = 0;
+        this.roundWLR = 0;
+        this.kdr = 0;
+        this.personalPlacements = new ArrayList<>();
+        this.teamPlacements = new ArrayList<>();
+        this.lastTeamPlacement = 0;
+        this.lastPersonalPlacement = 0;
     }
 
     @Override
     public JsonObject serializeData() {
-        return new JsonObject();
+
+        JsonObject jsonObject = new JsonObject();
+        Gson gson = new Gson();
+
+        jsonObject.addProperty("kills", kills);
+        jsonObject.addProperty("deaths", deaths);
+        jsonObject.addProperty("kdr", kdr);
+        jsonObject.addProperty("last_team_placement", lastTeamPlacement);
+        jsonObject.addProperty("last_personal_placement", lastPersonalPlacement);
+        jsonObject.addProperty("round_wins", roundWins);
+        jsonObject.addProperty("round_losses", roundLosses);
+        jsonObject.addProperty("round_wlr", roundWLR);
+
+
+        var personalPlacementsJSON = gson.toJsonTree(personalPlacements).getAsJsonArray();
+        jsonObject.add("personal_placements", personalPlacementsJSON);
+        var teamPlacementsJSON = gson.toJsonTree(teamPlacements).getAsJsonArray();
+        jsonObject.add("team_placements", teamPlacementsJSON);
+
+        return jsonObject;
     }
 
     @Override
     public void deserializeData(JsonObject jsonObject) {
+        Gson gson = new Gson();
 
+        this.kills = jsonObject.get("kills").getAsInt();
+        this.deaths = jsonObject.get("deaths").getAsInt();
+        this.roundWins = jsonObject.get("round_wins").getAsInt();
+        this.roundLosses= jsonObject.get("round_losses").getAsInt();
+        this.roundWLR = jsonObject.get("round_wlr").getAsDouble();
+        this.kdr = jsonObject.get("kdr").getAsDouble();
+        this.lastPersonalPlacement = jsonObject.get("last_personal_placement").getAsInt();
+        this.lastTeamPlacement = jsonObject.get("last_team_placement").getAsInt();
+
+        var type = new TypeToken<ArrayList<Integer>>(){}.getType();
+        this.personalPlacements = gson.fromJson(jsonObject.get("personal_placements"), type);
+        this.teamPlacements = gson.fromJson(jsonObject.get("team_placements"), type);
     }
 
     @Override

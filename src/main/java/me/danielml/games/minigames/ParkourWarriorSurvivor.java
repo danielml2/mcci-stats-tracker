@@ -8,6 +8,7 @@ import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.apache.commons.logging.Log;
 
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static me.danielml.MCCIStats.LOGGER;
+import static me.danielml.MCCIStats.onScoreboardUpdate;
 
 public class ParkourWarriorSurvivor extends Game  {
 
@@ -35,26 +37,41 @@ public class ParkourWarriorSurvivor extends Game  {
     private long unfinishedLeapTime = 0;
     private double currentLeapAverage, currentLeapBest;
     private boolean eliminated = false;
+    private int startPlayerAmount = 0;
 
 
     @Override
     public void onChatMessageInGame(Text messageText) {
         String messageContent = messageText.getString();
 
+        var client = MinecraftClient.getInstance();
         // The icon at the start is the skull emoji in MCCI font
         if(messageContent.contains("you were eliminated in ") && messageContent.startsWith("[\uE202]")) {
             LOGGER.info("Starts with: " + messageContent.startsWith("[\uE202]"));
             String[] split = messageContent.split("you were eliminated in");
             LOGGER.info("Split: " + Arrays.toString(split));
 
-            String placementText = messageContent.split("you were eliminated in")[1];
-            int placement = extractNumberFromText(placementText);
-            lastPlacement = placement;
-            lastPlacements.add(placement);
+            ScoreboardUtil.getCurrentScoreboard(client).ifPresent(scoreboard -> {
+                var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
 
-            DoubleSummaryStatistics stats = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics();
-            averagePlacement = stats.getAverage();
-            LOGGER.info("Eliminated at placement: " + placement);
+                // I would use the normal message it sends in the chat, but that just doesn't make sense at all and is just wrong sometimes
+                String playersEliminatedText = sidebarRows.get(3);
+                int playersEliminated = extractNumberFromText(playersEliminatedText.split(":")[1]);
+
+                int placement = startPlayerAmount - playersEliminated;
+                var message = Text.literal("§aCorrected placement: §6" + placement + "§a because " + playersEliminated + " " +
+                                "players got eliminated before you, and the game started with " + startPlayerAmount + " players.");
+
+                if(client.player != null)
+                    client.player.sendMessage(message);
+
+                lastPlacement = placement;
+                lastPlacements.add(placement);
+
+                DoubleSummaryStatistics stats = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics();
+                averagePlacement = stats.getAverage();
+                LOGGER.info("Eliminated at placement: " + placement);
+            });
             eliminated = true;
 
         } else if(messageContent.contains("Leap") && messageContent.contains("complete in") && messageContent.startsWith("[\uE000]")) {
@@ -73,6 +90,10 @@ public class ParkourWarriorSurvivor extends Game  {
                 LOGGER.info("Re-started unfinished time in the case they don't finish on time (again)");
                 unfinishedLeapTime = System.currentTimeMillis(); // Started timer for the next leap the player is catching up on.
                 currentPlayerLeap = leapNumber + 1;
+
+                var message = Text.literal("§aCorrected leap time: §6" + formatTime(finalTimeInSeconds) + "§a For some reason, if you don't complete in time, the time shown/sent is wrong");
+                if(client.player != null)
+                    client.player.sendMessage(message);
             } else {
                 // If finished in time, use the message for the time
                 String[] timerSplit = messageContent.split("complete in: ");
@@ -116,6 +137,7 @@ public class ParkourWarriorSurvivor extends Game  {
             playerCompletedLeaps = 1;
             currentGameLeap = 1;
             eliminated = false;
+            averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
             updateCurrentLeapStats();
         } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[\uE075]") && !eliminated) {
             currentPlayerLeap = extractNumberFromText(messageContent.split("Leap")[1]);
@@ -157,16 +179,24 @@ public class ParkourWarriorSurvivor extends Game  {
 
     @Override
     public void onTitleChange(String title) {
-        if(title.contains("Leap 1")) {
+        if(title.contains("Parkour Warrior") || title.contains("Leap 1")) {
             // Extra reset just in case it forgets for some reason and the standby message doesn't work for some reason
             LOGGER.info("Reset screen from title!");
             currentPlayerLeap = 1;
             leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
             averageLeapPlacementsInCurrentGame = 0;
             playerCompletedLeaps = 1;
+            averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
             currentGameLeap = 1;
             eliminated = false;
             updateCurrentLeapStats();
+            ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
+                var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
+
+                String playersRemaining = sidebarRows.get(3);
+                if(sidebarRows.size() > 4)
+                    startPlayerAmount = extractNumberFromText(playersRemaining.split("/")[1]);
+            });
         }
     }
 

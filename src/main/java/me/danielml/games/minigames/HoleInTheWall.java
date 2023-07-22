@@ -50,6 +50,18 @@ public class HoleInTheWall extends Game {
                         int wallSpeed = extractNumberFromText(wallSpeedText.split("WALL SPEED: ")[1]);
                         topWallSpeedSurvived = Math.max(topWallSpeedSurvived, wallSpeed);
                     });
+        } else if(messageContent.startsWith("[") && messageContent.contains("you survived")) {
+            lastPlacement = 1;
+            lastPlacements.add(lastPlacement);
+            DoubleSummaryStatistics stats = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics();
+            averagePlacement = stats.getAverage();
+
+            ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance())
+                    .ifPresent(scoreboard -> {
+                        String wallSpeedText = ScoreboardUtil.getSidebarRows(scoreboard).get(0); // Wall Speed is at Index 0
+                        int wallSpeed = extractNumberFromText(wallSpeedText.split("WALL SPEED: ")[1]);
+                        topWallSpeedSurvived = Math.max(topWallSpeedSurvived, wallSpeed);
+                    });
         }
     }
 

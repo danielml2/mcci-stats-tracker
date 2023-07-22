@@ -1,16 +1,16 @@
 package me.danielml;
 
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonWriter;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
 import me.danielml.mixin.TitleSubtitleMixin;
 import me.danielml.screen.DebugScreen;
 import me.danielml.screen.StatsHUD;
+import me.danielml.screen.config.UIPlacementScreen;
 import me.danielml.util.ScoreboardUtil;
 import me.danielml.util.ToggleableLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
@@ -18,13 +18,13 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.scoreboard.Scoreboard;
 
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 
@@ -43,13 +43,14 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	private final boolean DEBUG = false;
+	private final boolean DEBUG = true;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;
 
 	private String lastTitle;
 	private String lastSubtitle;
+	private KeyBinding configKeybinding;
 
 	@Override
 	public void onInitialize() {
@@ -66,7 +67,19 @@ public class MCCIStats implements ModInitializer {
 			currentGame.saveData();
 		});
 
+		configKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"me.danielml.mcci-config",
+				InputUtil.Type.KEYSYM,
+				GLFW.GLFW_KEY_END,
+				"Category"
+		));
+
+		ClientPlayConnectionEvents.JOIN.register((clientPlayNetworkHandler, packetSender, minecraftClient) -> {
+			LOGGER.info("Runnable!");
+		});
+
 		ClientSendMessageEvents.CHAT.register(message -> {
+//			MinecraftClient.getInstance().setScreenAndRender(new ConfigUI());
 			LOGGER.info("Sent chat message!");
 			if(DEBUG)
 				ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent((scoreboard -> {
@@ -80,6 +93,8 @@ public class MCCIStats implements ModInitializer {
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
+			if(configKeybinding.wasPressed())
+				MinecraftClient.getInstance().setScreen(new UIPlacementScreen(null));
 
 			String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
 			if(!currentServer.endsWith("mccisland.net"))
@@ -113,7 +128,7 @@ public class MCCIStats implements ModInitializer {
 				}
 
 
-				StringBuilder debugText = new StringBuilder("\n\n Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
+				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
 
 				// Temporary fix for it interfering with the MCCI top GUI, later there would be an option to change the location on the screen completely.

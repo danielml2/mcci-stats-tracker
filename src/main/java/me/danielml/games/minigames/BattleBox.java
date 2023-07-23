@@ -111,6 +111,15 @@ public class BattleBox extends Game {
     }
 
     @Override
+    public String previewUI() {
+        return "Last placements - Team: 4 Personal: 2 \n" +
+                "Avg. Personal Placement: 4.52 \n" +
+                "Avg. Team Placement: 2.45 \n" +
+                "KDR (Kill/Death Ratio): 0.94 (Kills: 80 Deaths: 85) \n" +
+                "Round WLR (Win/Loss Ratio): 0.78 (Round wins: 200 Losses: 255)";
+    }
+
+    @Override
     public void loadFailSafeDefaultData() {
         this.kills = 0;
         this.deaths = 0;

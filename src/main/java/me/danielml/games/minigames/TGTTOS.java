@@ -123,6 +123,14 @@ public class TGTTOS extends Game {
                 "Best time for " + currentMap + ": " + formatTime(bestCurrentMapTime);
     }
 
+    @Override
+    public String previewUI() {
+        return "Last game placement: 2 \n" +
+                "Avg. game placement: 5.32 \n" +
+                "Avg. round placement (Overall): 8.23 \n"  +
+                "Best time for Air Train: " + "00:32.456";
+    }
+
     public String capitalizeString(String text) {
         var words = text.split(" ");
 

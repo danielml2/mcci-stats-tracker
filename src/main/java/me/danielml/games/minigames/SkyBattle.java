@@ -118,6 +118,16 @@ public class SkyBattle extends Game {
     }
 
     @Override
+    public String previewUI() {
+        return  "Latest placements for Survivor: 8 Personal: 10 \n" +
+                " Team: 4 \n" +
+                "Avg. Survivor Placement 15.67 \n" +
+                "Avg. Personal Placement: 2.345 \n"
+                + "Avg. Team placement: 6.45 \n" +
+                "KDR: 0.88 (Kills: 53 Deaths: 60)";
+    }
+
+    @Override
     public void loadFailSafeDefaultData() {
         this.kills = 0;
         this.deaths = 0;

@@ -73,6 +73,13 @@ public class HoleInTheWall extends Game {
     }
 
     @Override
+    public String previewUI() {
+        return "Last Placement: 5 \n " +
+                "Avg. Placement 3 (3.89) \n " +
+                "Top Wall Speed: 70";
+    }
+
+    @Override
     public String getSidebarIdentifier() {
         return "HOLE IN THE WALL";
     }

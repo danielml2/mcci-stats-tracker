@@ -26,6 +26,10 @@ public abstract class Game {
 
     public void onSubtitleChange(String subtitle) {}
 
+    public String previewUI() {
+        return "";
+    }
+
     public void onSidebarUpdate(List<String> sidebarRows) {}
     public final void saveData() {
         if(getSidebarIdentifier().equalsIgnoreCase("None"))

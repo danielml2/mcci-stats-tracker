@@ -5,6 +5,7 @@ import me.danielml.games.minigames.*;
 import me.danielml.mixin.TitleSubtitleMixin;
 import me.danielml.screen.DebugScreen;
 import me.danielml.screen.StatsHUD;
+import me.danielml.screen.config.ConfigUI;
 import me.danielml.screen.config.UIPlacementScreen;
 import me.danielml.util.ScoreboardUtil;
 import me.danielml.util.ToggleableLogger;
@@ -26,6 +27,7 @@ import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.ObjectInputFilter;
 import java.util.Arrays;
 
 
@@ -56,6 +58,8 @@ public class MCCIStats implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("Logger enabled: " + DEBUG);
 		LOGGER.setEnabled(DEBUG);
+
+		ConfigUI.initAndLoad();
 
 		if(DEBUG)
 			HudRenderCallback.EVENT.register(new DebugScreen());
@@ -94,7 +98,7 @@ public class MCCIStats implements ModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 			if(configKeybinding.wasPressed())
-				MinecraftClient.getInstance().setScreen(new UIPlacementScreen(null));
+				MinecraftClient.getInstance().setScreen(ConfigUI.getConfigUI());
 
 			String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
 			if(!currentServer.endsWith("mccisland.net"))
@@ -172,8 +176,11 @@ public class MCCIStats implements ModInitializer {
 		return optional.orElse(NONE);
 	}
 
-	public void saveGameData() {
-
+	public static Game getGameByIndex(int index) {
+		return GAMES[index];
+	}
+	public static int gameCount() {
+		return GAMES.length;
 	}
 
 	public static void onScoreboardUpdate() {

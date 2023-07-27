@@ -36,6 +36,10 @@ public class ToggleableLogger {
             logger.error(message, exception);
     }
 
+    public void forceWarn(String message) {
+        logger.warn(message);
+    }
+
     public void forceError(String message, Exception e) {
         logger.error(message, e);
     }

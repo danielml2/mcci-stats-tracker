@@ -34,7 +34,7 @@ public class DebugScreen implements HudRenderCallback {
         y = newY;
     }
 
-    public static void setTextColorHex(Color color) {
+    public static void setTextColor(Color color) {
         var hexStr = Integer.toHexString(color.getRGB());
         textColor = color;
         textColorHex = Integer.valueOf(hexStr.substring(2), 16);

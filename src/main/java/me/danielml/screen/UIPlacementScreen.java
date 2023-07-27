@@ -1,6 +1,6 @@
-package me.danielml.screen.config;
+package me.danielml.screen;
 
-import me.danielml.screen.DebugScreen;
+import me.danielml.config.ConfigManager;
 import net.minecraft.client.font.MultilineText;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,6 +15,8 @@ import static me.danielml.MCCIStats.*;
 public class UIPlacementScreen extends Screen {
 
     private final Screen previousScreen;
+
+    private final ConfigManager configManager;
     private ButtonWidget previewTextSwap;
     private String previewText;
     private MultilineText previewMultiline;
@@ -26,11 +28,12 @@ public class UIPlacementScreen extends Screen {
     private int gameIndex = 0;
     private int mouseColor = 0;
 
-    public UIPlacementScreen(Screen previousScreen, int startX, int startY) {
+    public UIPlacementScreen(Screen previousScreen, int startX, int startY, ConfigManager configManager) {
         super(Text.literal(""));
         previewX = startX;
         previewY = startY;
         this.previousScreen = previousScreen;
+        this.configManager = configManager;
     }
 
     @Override
@@ -86,8 +89,6 @@ public class UIPlacementScreen extends Screen {
             LOGGER.info("Mouse not over button!");
             previewX = (int) mouseX;
             previewY = (int) mouseY;
-//            ConfigUI.setConfigValue("hudX", mouseX);
-//            ConfigUI.setConfigValue("hudY", mouseY);
         } else if(button == 1) {
             changePreviewText();
         }
@@ -97,6 +98,8 @@ public class UIPlacementScreen extends Screen {
 
     @Override
     public void close() {
+        configManager.setHUDPositionValues(previewX, previewY);
+        LOGGER.info("HUD X: " + previewX + " HUD Y: " + previewY);
         client.setScreen(previousScreen);
     }
 

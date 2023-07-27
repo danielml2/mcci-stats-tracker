@@ -1,7 +1,5 @@
 package me.danielml;
 
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonWriter;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
 import me.danielml.mixin.TitleSubtitleMixin;
@@ -12,19 +10,14 @@ import me.danielml.util.ToggleableLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.scoreboard.Scoreboard;
-
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
@@ -140,12 +133,31 @@ public class MCCIStats implements ModInitializer {
 		}
 		// For some reason, the title of the game while IN GAME shows only on the 3rd sibling of the text, in lobby's it shows on the 2nd one, no idea why
 		var gameTitle = objectiveDisplayName.getSiblings().get(2).getString();
-		if(currentGame != getGameFromIdentifier(gameTitle)) {
-			currentGame.saveData();
-			currentGame = getGameFromIdentifier(gameTitle);
-			currentGame.loadData();
-			LOGGER.info("Game Played Currently: " + gameTitle);
-		}
+		// In case for some reason the scoreboard doesn't load in time or something weird happens
+		ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresentOrElse(scoreboard -> {
+			boolean isDojo = false;
+			var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
+			for(String row : sidebarRows) {
+				if (row.contains("COURSE") || row.contains("medal")) {
+					isDojo = true;
+					break;
+				}
+			}
+			if(currentGame != getGameFromIdentifier(gameTitle) && !isDojo) {
+				loadNewMinigame(getGameFromIdentifier(gameTitle));
+			}
+		}, () -> {
+			if(currentGame != getGameFromIdentifier(gameTitle)) {
+				loadNewMinigame(getGameFromIdentifier(gameTitle));
+			}
+		});
+	}
+
+	public void loadNewMinigame(Game newGame) {
+		currentGame.saveData();
+		currentGame = newGame;
+		currentGame.loadData();
+		LOGGER.info("Game Played Currently: " + newGame.getSidebarIdentifier());
 	}
 
 
@@ -157,8 +169,8 @@ public class MCCIStats implements ModInitializer {
 		return optional.orElse(NONE);
 	}
 
-	public void saveGameData() {
-
+	public static void resetToNone() {
+		currentGame = NONE;
 	}
 
 	public static void onScoreboardUpdate() {

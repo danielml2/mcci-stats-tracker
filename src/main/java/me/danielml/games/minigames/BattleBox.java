@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static me.danielml.MCCIStats.LOGGER;
-import static me.danielml.MCCIStats.onScoreboardUpdate;
 
 public class BattleBox extends Game {
 
@@ -33,8 +32,25 @@ public class BattleBox extends Game {
         String username = MinecraftClient.getInstance().getSession().getUsername();
 
         // Kill messages & Round lost messages
-        if(messageContent.startsWith("[\uE202]")) {
-            if(messageContent.contains("by \uE229 " + username)) {
+        if(messageContent.startsWith("[")) {
+            var wordsSplit = messageContent.split(" ");
+            boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
+            LOGGER.info("Is death: " + isDeath);
+            LOGGER.info(Arrays.toString(wordsSplit));
+
+            // Double check just in case wording changes for some reason
+            if(wordsSplit.length >= 3)
+                for(int i = 0; i < 3; i++) {
+                    if(wordsSplit[i].equalsIgnoreCase(username))
+                    {
+                        isDeath = true;
+                        LOGGER.info("Found on index " + i);
+                        break;
+                    }
+
+                }
+
+            if(messageContent.contains(username) && !isDeath) {
                 LOGGER.info("Detected a kill!");
                 kills += 1;
                 if(deaths == 0)
@@ -49,30 +65,33 @@ public class BattleBox extends Game {
                 roundLosses += 1;
                 roundWLR = (double) roundWins / roundLosses;
                 LOGGER.info("Round lost! New WLR: " + roundWLR);
-            }
-        }
-        // Game Over prefix
-        else if(messageContent.startsWith("[\uE070]")) {
-            if(messageContent.contains("Game Over")) {
+            } else if(messageContent.contains("you won")) {
+                roundWins += 1;
+                if(roundLosses == 0)
+                    roundWLR = roundWins;
+                else
+                    roundWLR = (double) roundWins / roundLosses;
+                LOGGER.info("Round won! New WLR: " + roundWLR);
+            } else if(messageContent.contains("Game Over")) {
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
                     int placementsFoundCount = 0;
                     for(String row: sidebarRows) {
 
-                       if(row.contains("\uE00E\uE00A\uE006\uE004")) {
-                           String teamText = row.split("\uE00E\uE00A\uE006\uE004")[1];
-                           lastTeamPlacement = extractNumberFromText(teamText);
-                           teamPlacements.add(lastTeamPlacement);
-                           placementsFoundCount++;
-                       } else if(row.contains(username)) {
-                           String personalText = row.split("\uE00E")[1];
-                           lastPersonalPlacement = extractNumberFromText(personalText);
-                           personalPlacements.add(lastPersonalPlacement);
-                           placementsFoundCount++;
-                       }
-                       if(placementsFoundCount >= 2)
-                           break;
+                        if(row.contains("\uE00E\uE00A\uE006\uE004")) {
+                            String teamText = row.split("\uE00E\uE00A\uE006\uE004")[1];
+                            lastTeamPlacement = extractNumberFromText(teamText);
+                            teamPlacements.add(lastTeamPlacement);
+                            placementsFoundCount++;
+                        } else if(row.contains(username)) {
+                            String personalText = row.split("\uE00E")[1];
+                            lastPersonalPlacement = extractNumberFromText(personalText);
+                            personalPlacements.add(lastPersonalPlacement);
+                            placementsFoundCount++;
+                        }
+                        if(placementsFoundCount >= 2)
+                            break;
                     }
 
                     averagePersonalPlacement = personalPlacements.stream()
@@ -86,15 +105,6 @@ public class BattleBox extends Game {
                     LOGGER.info("New average personal: " + averagePersonalPlacement);
                     LOGGER.info("New average team: " + averageTeamPlacement);
                 });
-            }
-        } else if(messageContent.startsWith("[\uE000]")) {
-            if(messageContent.contains("you won")) {
-                roundWins += 1;
-                if(roundLosses == 0)
-                    roundWLR = roundWins;
-                else
-                    roundWLR = (double) roundWins / roundLosses;
-                LOGGER.info("Round won! New WLR: " + roundWLR);
             }
         }
     }

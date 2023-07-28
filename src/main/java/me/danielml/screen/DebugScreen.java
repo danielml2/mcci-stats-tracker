@@ -10,23 +10,35 @@ import java.awt.*;
 
 public class DebugScreen implements HudRenderCallback {
 
-    private static String textToShow = "Debug \n".repeat(5);
+    private static String textToShow = "";
     private static double x, y;
 
+    private static boolean hudEnabled = true;
+    private static boolean drawWithShadows = true;
     private static int textColorHex = 0xEEEEEE;
-    private static Color textColor = new Color(238, 238, 238, 255);
+    public static Color DEFAULT = new Color(238, 238, 238, 255);
+    private static Color textColor = DEFAULT;
 
     @Override
     public void onHudRender(MatrixStack matrixStack, float v) {
         var textRenderer = (MinecraftClient.getInstance()).textRenderer;
 
         matrixStack.scale(1,1,1);
-        MultilineText multilineText = MultilineText.create(textRenderer, Text.literal(textToShow), 0xEEEEEE);
-        multilineText.drawWithShadow(matrixStack, (int)x, (int)y, textRenderer.fontHeight, textColorHex);
+        if(hudEnabled) {
+            MultilineText multilineText = MultilineText.create(textRenderer, Text.literal(textToShow), 0xEEEEEE);
+            if(drawWithShadows)
+                multilineText.drawWithShadow(matrixStack, (int)x, (int)y, textRenderer.fontHeight, textColorHex);
+            else
+                multilineText.draw(matrixStack, (int)x, (int)y, textRenderer.fontHeight, textColorHex);
+        }
     }
 
     public static void logText(String newText) {
         textToShow = newText;
+    }
+
+    public static void setHudEnabled(boolean hudEnabled) {
+        DebugScreen.hudEnabled = hudEnabled;
     }
 
     public static void setPosition(double newX, double newY) {
@@ -46,5 +58,9 @@ public class DebugScreen implements HudRenderCallback {
 
     public static Color getTextColor() {
         return textColor;
+    }
+
+    public static void setDrawWithShadows(boolean drawWithShadows) {
+        DebugScreen.drawWithShadows = drawWithShadows;
     }
 }

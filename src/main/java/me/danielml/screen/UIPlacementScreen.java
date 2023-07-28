@@ -1,5 +1,6 @@
 package me.danielml.screen;
 
+import me.danielml.MCCIStats;
 import me.danielml.config.ConfigManager;
 import net.minecraft.client.font.MultilineText;
 import net.minecraft.client.font.TextRenderer;
@@ -28,6 +29,8 @@ public class UIPlacementScreen extends Screen {
     private int gameIndex = 0;
     private int mouseColor = 0;
 
+    private int textColorHex;
+
     public UIPlacementScreen(Screen previousScreen, int startX, int startY, ConfigManager configManager) {
         super(Text.literal(""));
         previewX = startX;
@@ -38,12 +41,12 @@ public class UIPlacementScreen extends Screen {
 
     @Override
     protected void init() {
-
+        textColorHex = DEBUG ? DebugScreen.getTextColorHex() : StatsHUD.getTextColorHex();
 
         previewText = getGameByIndex(gameIndex).previewUI();
         previewMultiline = MultilineText.create(textRenderer, Text.literal(previewText), 200);
         mousePosition = MultilineText.create(textRenderer, Text.literal(previewText), 0xEEEEEE);
-        mouseColor = generateHalfTransparentVersionInHex(DebugScreen.getTextColor());
+        mouseColor = DEBUG ? generateHalfTransparentVersionInHex(DebugScreen.getTextColor()) : generateHalfTransparentVersionInHex(StatsHUD.getTextColor());
 
         instructions = MultilineText.create(textRenderer,
                 Text.literal(" Left Click to choose a position. \n " +
@@ -63,9 +66,15 @@ public class UIPlacementScreen extends Screen {
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
-        previewMultiline.drawWithShadow(matrices, previewX, previewY, textRenderer.fontHeight, DebugScreen.getTextColorHex());
+
+        if(StatsHUD.isDrawingWithShadows()) {
+            previewMultiline.drawWithShadow(matrices, previewX, previewY, textRenderer.fontHeight, textColorHex);
+            mousePosition.drawWithShadow(matrices, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
+        } else {
+            previewMultiline.draw(matrices, previewX, previewY, textRenderer.fontHeight, textColorHex);
+            mousePosition.draw(matrices, previewX, previewY, textRenderer.fontHeight, mouseColor);
+        }
         instructions.drawWithShadow(matrices, width / 2 - 75, previewTextSwap.getY() - 50, textRenderer.fontHeight, 0xEEEEEE);
-        mousePosition.drawWithShadow(matrices, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
     }
 
     public int generateHalfTransparentVersionInHex(Color color) {
@@ -98,7 +107,7 @@ public class UIPlacementScreen extends Screen {
 
     @Override
     public void close() {
-        configManager.setHUDPositionValues(previewX, previewY);
+        configManager.requestSetPosition(previewX, previewY);
         LOGGER.info("HUD X: " + previewX + " HUD Y: " + previewY);
         client.setScreen(previousScreen);
     }
@@ -114,7 +123,7 @@ public class UIPlacementScreen extends Screen {
 
         @Override
         public void drawMessage(MatrixStack matrices, TextRenderer textRenderer, int color) {
-            multilineMessage.drawCenterWithShadow(matrices, getX() + (width / 2), getY() + (height / 2) - textRenderer.fontHeight, textRenderer.fontHeight, DebugScreen.getTextColorHex());
+            multilineMessage.drawCenterWithShadow(matrices, getX() + (width / 2), getY() + (height / 2) - textRenderer.fontHeight, textRenderer.fontHeight, 0xEEEEEE);
         }
 
         @Override

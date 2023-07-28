@@ -43,7 +43,7 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	private final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;
@@ -72,10 +72,10 @@ public class MCCIStats implements ModInitializer {
 		});
 
 		configKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"me.danielml.mcci-config",
+				"Open Configuration Screen",
 				InputUtil.Type.KEYSYM,
 				GLFW.GLFW_KEY_END,
-				"Category"
+				"MCCI Stats Tracker"
 		));
 
 		ClientPlayConnectionEvents.JOIN.register((clientPlayNetworkHandler, packetSender, minecraftClient) -> {

@@ -3,19 +3,18 @@ package me.danielml.config;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import dev.isxander.yacl3.api.ButtonOption;
-import dev.isxander.yacl3.api.ConfigCategory;
-import dev.isxander.yacl3.api.Option;
-import dev.isxander.yacl3.api.YetAnotherConfigLib;
+import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.BooleanControllerBuilder;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
 import dev.isxander.yacl3.impl.controller.IntegerFieldControllerBuilderImpl;
 import dev.isxander.yacl3.impl.controller.TickBoxControllerBuilderImpl;
 import me.danielml.screen.DebugScreen;
+import me.danielml.screen.StatsHUD;
 import me.danielml.screen.UIPlacementScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.ClickEvent;
 import net.minecraft.text.Text;
 
 import java.awt.*;
@@ -24,23 +23,25 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Arrays;
 import java.util.HashMap;
+
 import static me.danielml.MCCIStats.LOGGER;
 
 public class ConfigManager {
 
-    private static HashMap<String, Object> configValues;
+    private final HashMap<String, Object> configValues;
     private Option<Integer> hudX, hudY;
 
     public ConfigManager() {
         configValues = new HashMap<>();
         loadConfigFromFile();
+        applySettings();
     }
 
     private <T> T getConfigValue(String key, Class<T> type) {
         return type.cast(configValues.get(key));
     }
 
-    public void setConfigValue(String key, Object value) {
+    private void setConfigValue(String key, Object value) {
         configValues.put(key, value);
     }
 
@@ -48,6 +49,7 @@ public class ConfigManager {
         hudX = Option.<Integer>createBuilder()
                 .name(Text.of("HUD X"))
                 .available(false)
+                .description(OptionDescription.of(Text.literal("The X offset of the HUD's position on the screen (changes slightly between window sizes)")))
                 .binding(0,
                         () -> getConfigValue("hudX", Integer.class),
                         (newValue) -> setConfigValue("hudX", newValue)
@@ -57,6 +59,7 @@ public class ConfigManager {
         hudY = Option.<Integer>createBuilder()
                 .name(Text.of("HUD Y"))
                 .available(false)
+                .description(OptionDescription.of(Text.literal("The Y offset of the HUD's position on the screen (changes slightly between window sizes)")))
                 .binding(0,
                         () -> getConfigValue("hudY", Integer.class),
                         (newValue) -> setConfigValue("hudY", newValue)
@@ -64,13 +67,19 @@ public class ConfigManager {
                 .controller(IntegerFieldControllerBuilderImpl::new)
                 .build();
 
+        var colorDescription = Text.literal("In order to change the color of it, find the §eHEX Color Code §fof it using an ")
+                .append(Text.literal("§9§nonline color picker like this")
+                        .styled(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://g.co/kgs/947HZ8"))))
+                .append(" and put it on the option value");
+
+
         return YetAnotherConfigLib.createBuilder()
                 .title(Text.literal("MCCI Stats Tracker"))
                 .category(ConfigCategory.createBuilder()
                         .name(Text.literal("UI Settings"))
-                        .options(Arrays.asList(
-                                Option.<Boolean>createBuilder()
+                        .option(Option.<Boolean>createBuilder()
                                 .name(Text.literal("Stats HUD on/off"))
+                                .description(OptionDescription.of(Text.literal("Should the HUD render or not (NOTE: This doesn't disable the stats tracking)")))
                                 .binding(
                                         true,
                                         () -> getConfigValue("hudEnabled", Boolean.class),
@@ -78,37 +87,45 @@ public class ConfigManager {
                                 )
                                 .controller(opt -> BooleanControllerBuilder.create(opt)
                                         .valueFormatter(val -> Text.of(val ? "ON" : "OFF")))
-                                .build(),
-                                ButtonOption.createBuilder()
-                                        .name(Text.literal("Change HUD Placement"))
-                                        .text(Text.literal("Set & Preview"))
-                                        .available(true)
-                                        .action((yaclScreen, buttonOption) -> {
-                                             MinecraftClient.getInstance().setScreen(
-                                                     new UIPlacementScreen(yaclScreen,
-                                                             getConfigValue("hudX", Integer.class),
-                                                             getConfigValue("hudY", Integer.class),
-                                                             this));
-                                        }).build(),
-                                Option.<Color>createBuilder()
+                                .build())
+                        .option(Option.<Color>createBuilder()
                                         .name(Text.literal("HUD Text Color"))
                                         .binding(
-                                                Color.white,
+                                                DebugScreen.DEFAULT,
                                                 () -> getConfigValue("textColor", Color.class),
                                                 (color) -> configValues.put("textColor", color)
                                         )
+                                        .description(OptionDescription.of(colorDescription))
                                         .controller(ColorControllerBuilder::create)
-                                        .build(),
-                                Option.<Boolean>createBuilder()
+                                        .build())
+                        .option(Option.<Boolean>createBuilder()
                                         .name(Text.literal("Draw Text with Shadows"))
+                                        .description(OptionDescription.of(Text.literal("Should the text of the HUD rendered with or without shadows")))
                                         .binding(true,
                                                 () -> getConfigValue("drawShadows", Boolean.class),
                                                 (shadowSetting) -> setConfigValue("drawShadows", shadowSetting))
                                         .controller(TickBoxControllerBuilderImpl::new)
-                                        .build(),
-                                hudX,
-                                hudY
-                        )).build())
+                                        .build())
+                        .group(OptionGroup.createBuilder()
+                                .name(Text.literal("HUD Placement"))
+                                .options(Arrays.asList(ButtonOption.createBuilder()
+                                                .name(Text.literal("Change HUD Placement"))
+                                                .text(Text.literal("Set & Preview"))
+                                                .description(OptionDescription.of(
+                                                        Text.literal("Change the placement of the stats HUD on your screen, and preview different game's text to see how it looks")))
+                                                .available(true)
+                                                .action((yaclScreen, buttonOption) -> {
+                                                    MinecraftClient.getInstance().setScreen(
+                                                            new UIPlacementScreen(yaclScreen,
+                                                                    getConfigValue("hudX", Integer.class),
+                                                                    getConfigValue("hudY", Integer.class),
+                                                                    this));
+                                                }).build()
+                                        ,
+                                        hudX,
+                                        hudY)
+                                ).build()
+                        ).build())
                         .save(this::applyAndSave)
                 .build()
                 .generateScreen(null);
@@ -116,12 +133,30 @@ public class ConfigManager {
 
 
     private void applyAndSave() {
-        DebugScreen.setTextColor(getConfigValue("textColor", Color.class));
-        DebugScreen.setPosition(getConfigValue("hudX", Integer.class), getConfigValue("hudY", Integer.class));
+        applySettings();
         serializeAndSave();
     }
 
-    public void setHUDPositionValues(int x, int y) {
+    public void applySettings() {
+        var hudEnabled = getConfigValue("hudEnabled", Boolean.class);
+        var hudX = getConfigValue("hudX", Integer.class);
+        var hudY = getConfigValue("hudY", Integer.class);
+        var textColor = getConfigValue("textColor", Color.class);
+        var drawShadows = getConfigValue("drawShadows", Boolean.class);
+
+
+        StatsHUD.setTextColor(textColor);
+        StatsHUD.setPosition(hudX, hudY);
+        StatsHUD.setHudEnabled(hudEnabled);
+        StatsHUD.setDrawWithShadows(drawShadows);
+
+        DebugScreen.setTextColor(textColor);
+        DebugScreen.setPosition(hudX,hudY);
+        DebugScreen.setHudEnabled(hudEnabled);
+        DebugScreen.setDrawWithShadows(drawShadows);
+    }
+
+    public void requestSetPosition(int x, int y) {
         hudX.requestSet(x);
         hudY.requestSet(y);
     }
@@ -173,6 +208,7 @@ public class ConfigManager {
             configValues.put("hudX", jsonObject.get("hudX").getAsInt());
             configValues.put("hudY", jsonObject.get("hudY").getAsInt());
             configValues.put("textColor", deserializeColor(jsonObject.getAsJsonObject("textColor")));
+            applySettings();
         } catch (Exception e) {
             LOGGER.forceError("Failed to load config file! ", e);
         }
@@ -189,7 +225,7 @@ public class ConfigManager {
 
     private void loadDefaults() {
         configValues.put("hudEnabled", true);
-        configValues.put("textColor", new Color(238, 238, 238));
+        configValues.put("textColor", DebugScreen.DEFAULT);
         configValues.put("drawShadows", true);
         configValues.put("hudX", 0);
         configValues.put("hudY", 0);

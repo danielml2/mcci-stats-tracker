@@ -6,14 +6,11 @@ import com.google.gson.JsonObject;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.ai.goal.TrackIronGolemTargetGoal;
 import net.minecraft.text.Text;
 
-import java.nio.file.LinkOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static me.danielml.MCCIStats.LOGGER;
@@ -36,8 +33,7 @@ public class TGTTOS extends Game {
     public void onChatMessageInGame(Text messageText) {
         String messageContent = messageText.getString();
 
-        if(messageContent.startsWith("[\uE000]")) {
-
+        if(messageContent.startsWith("[")) {
             if (messageContent.contains("you finished the round and came in")) {
                 int placement = extractNumberFromText(messageContent.split("came in")[1]);
                 lastRoundPlacements.add(placement);
@@ -54,14 +50,12 @@ public class TGTTOS extends Game {
                 }
                 updateMapBestTime();
 
-            }
-        } else if(messageContent.startsWith("[\uE07A]")) {
-             if(messageContent.contains("Round") && messageContent.contains("started!")) {
+            } else if (messageContent.contains("Round") && messageContent.contains("started!")) {
                 roundTime = System.currentTimeMillis();
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
-                    var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
-                    if(sidebarRows.size() > 0) {
+                    var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
+                    if (sidebarRows.size() > 0) {
                         String mapString = sidebarRows.get(0);
                         currentMap = mapString.split("MAP: ")[1];
                         currentMap = capitalizeString(currentMap);
@@ -69,25 +63,25 @@ public class TGTTOS extends Game {
                         updateMapBestTime();
                     }
                 });
-            } else if(messageContent.contains("Game Over")) {
-                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
+            } else if (messageContent.contains("Game Over")) {
+                ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
-                     String username = MinecraftClient.getInstance().getSession().getUsername();
-                     var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
+                    String username = MinecraftClient.getInstance().getSession().getUsername();
+                    var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
 
-                     for(String s: sidebarRows) {
-                         if(s.contains(username)) {
-                             String placementText = s.split("\uE00A\uE006\uE004")[1];
-                             int finalPlacement = extractNumberFromText(placementText);
-                             lastPlacement = finalPlacement;
-                             LOGGER.info("Game placement: " + finalPlacement);
-                             lastPlacements.add(finalPlacement);
-                             var stats = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics();
-                             gamePlacementAverage = stats.getAverage();
-                             break;
-                         }
-                     }
-                 });
+                    for (String s : sidebarRows) {
+                        if (s.contains(username)) {
+                            String placementText = s.split("\uE00A\uE006\uE004")[1];
+                            int finalPlacement = extractNumberFromText(placementText);
+                            lastPlacement = finalPlacement;
+                            LOGGER.info("Game placement: " + finalPlacement);
+                            lastPlacements.add(finalPlacement);
+                            var stats = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics();
+                            gamePlacementAverage = stats.getAverage();
+                            break;
+                        }
+                    }
+                });
             }
         }
     }

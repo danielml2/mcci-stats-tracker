@@ -3,13 +3,10 @@ package me.danielml.games.minigames;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.sun.jna.platform.win32.OaIdl;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import org.apache.commons.logging.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static me.danielml.MCCIStats.LOGGER;
-import static me.danielml.MCCIStats.onScoreboardUpdate;
+import static me.danielml.MCCIStats.resetToNone;
 
 public class ParkourWarriorSurvivor extends Game  {
 
@@ -46,7 +43,7 @@ public class ParkourWarriorSurvivor extends Game  {
 
         var client = MinecraftClient.getInstance();
         // The icon at the start is the skull emoji in MCCI font
-        if(messageContent.contains("you were eliminated in ") && messageContent.startsWith("[\uE202]")) {
+        if(messageContent.contains("you were eliminated in ") && messageContent.startsWith("[")) {
             LOGGER.info("Starts with: " + messageContent.startsWith("[\uE202]"));
             String[] split = messageContent.split("you were eliminated in");
             LOGGER.info("Split: " + Arrays.toString(split));
@@ -74,7 +71,7 @@ public class ParkourWarriorSurvivor extends Game  {
             });
             eliminated = true;
 
-        } else if(messageContent.contains("Leap") && messageContent.contains("complete in") && messageContent.startsWith("[\uE000]")) {
+        } else if(messageContent.contains("Leap") && messageContent.contains("complete in") && messageContent.startsWith("[")) {
 
             double finalTimeInSeconds;
 
@@ -129,7 +126,7 @@ public class ParkourWarriorSurvivor extends Game  {
             LOGGER.info("Formatted leap time: " + formatTime(finalTimeInSeconds));
             updateCurrentLeapStats();
 
-        } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[\uE075]")) {
+        } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[")) {
             LOGGER.info("Reset screen for start of game!");
             currentPlayerLeap = 1;
             leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
@@ -139,13 +136,13 @@ public class ParkourWarriorSurvivor extends Game  {
             eliminated = false;
             averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
             updateCurrentLeapStats();
-        } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[\uE075]") && !eliminated) {
+        } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[") && !eliminated) {
             currentPlayerLeap = extractNumberFromText(messageContent.split("Leap")[1]);
             LOGGER.info("Leap " + currentPlayerLeap + " started!");
             unfinishedLeapTime = System.currentTimeMillis();
             updateCurrentLeapStats();
 
-        } else if(messageContent.contains("Leap") && messageContent.contains("ended") && messageContent.startsWith("[\uE075]")) {
+        } else if(messageContent.contains("Leap") && messageContent.contains("ended") && messageContent.startsWith("[")) {
             // The leap ended message will ALWAYS send after you complete (if you complete in time),
             // only if you don't complete it in time the ended message will send BEFORE the complete message (requiring custom time instead of the message).
             int leapEnded = extractNumberFromText(messageContent.split("Leap")[1]);
@@ -180,22 +177,30 @@ public class ParkourWarriorSurvivor extends Game  {
     @Override
     public void onTitleChange(String title) {
         if(title.contains("Parkour Warrior") || title.contains("Leap 1")) {
-            // Extra reset just in case it forgets for some reason and the standby message doesn't work for some reason
-            LOGGER.info("Reset screen from title!");
-            currentPlayerLeap = 1;
-            leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
-            averageLeapPlacementsInCurrentGame = 0;
-            playerCompletedLeaps = 1;
-            averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-            currentGameLeap = 1;
-            eliminated = false;
-            updateCurrentLeapStats();
             ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
                 var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
 
                 String playersRemaining = sidebarRows.get(3);
-                if(sidebarRows.size() > 4)
+
+                var split = playersRemaining.split("/");
+                if(split.length < 2)
+                {
+                    // In case parkour warrior is for some reason loaded anyway when entering the dojo
+                    resetToNone();
+                } else {
                     startPlayerAmount = extractNumberFromText(playersRemaining.split("/")[1]);
+
+                    // Extra reset just in case it forgets for some reason and the standby message doesn't work for some reason
+                    LOGGER.info("Reset screen from title!");
+                    currentPlayerLeap = 1;
+                    leapPlacementsInCurrentGame = new int[]{-1, -1, -1, -1, -1, -1, -1, -1};
+                    averageLeapPlacementsInCurrentGame = 0;
+                    playerCompletedLeaps = 1;
+                    averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+                    currentGameLeap = 1;
+                    eliminated = false;
+                    updateCurrentLeapStats();
+                }
             });
         }
     }

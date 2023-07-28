@@ -7,9 +7,10 @@ import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
-import org.objectweb.asm.TypeReference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import static me.danielml.MCCIStats.LOGGER;
 
 public class SkyBattle extends Game {
@@ -33,44 +34,54 @@ public class SkyBattle extends Game {
         String messageContent = messageText.getString();
 
         String username = MinecraftClient.getInstance().getSession().getUsername();
-        if(messageContent.startsWith("[\uE202]")) {
-            if(messageContent.contains(username) && !messageContent.startsWith("[\uE202] \uE229 " + username)) {
+        if(messageContent.startsWith("[")) {
+            var wordsSplit = messageContent.split(" ");
+            boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
+            LOGGER.info("Is death: " + isDeath);
+            LOGGER.info(Arrays.toString(wordsSplit));
+
+            // Double check just in case wording changes for some reason
+            if(wordsSplit.length >= 3)
+                for(int i = 0; i < 3; i++) {
+                    if(wordsSplit[i].equalsIgnoreCase(username))
+                    {
+                        isDeath = true;
+                        LOGGER.info("Found on index " + i);
+                        break;
+                    }
+
+                }
+
+            if (messageContent.contains(username) && !isDeath) {
                 kills += 1;
                 LOGGER.info("Kill detected!");
-                if(deaths == 0)
+                if (deaths == 0)
                     kdr = kills;
                 else
                     kdr = (double) kills / deaths;
                 LOGGER.info("New KDR: " + kdr);
-            }
-        } else if(messageContent.startsWith("\uE016\uE00F") && messageContent.contains("Outlived")) {
-            if(messageContent.contains("players")) {
-                LOGGER.info("Detected a death!");
-                deaths += 1;
-                kdr = (double) kills / deaths;
-
-                lastSurvivorPlacement = startingPlayerAmount - extractNumberFromText(messageContent.split("Outlived")[1]);
-                survivorPlacements.add(lastSurvivorPlacement);
-
-                averageSurvivorPlacement = survivorPlacements.stream()
-                        .mapToDouble(p -> p)
-                        .summaryStatistics()
-                        .getAverage();
-            } else if(messageContent.contains("team")) {
-                lastTeamPlacement = 8 - extractNumberFromText(messageContent.split("Outlived")[1]);
-                teamPlacements.add(lastTeamPlacement);
-                averageTeamPlacement = teamPlacements.stream()
-                        .mapToDouble(p -> p)
-                        .summaryStatistics()
-                        .getAverage();
-            }
-        } else if(messageContent.startsWith("[\uE079]")) {
-            if(messageContent.contains("Game Over")) {
+            } else if (messageContent.contains("Game Started") || messageContent.contains("Stand by for the game to begin")) {
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    for(String row : sidebarRows) {
-                        if(row.contains(username)) {
+                    if (sidebarRows.size() >= 9) {
+
+                        String playersText = sidebarRows.get(8);
+                        startingPlayerAmount = extractNumberFromText(playersText.split(":")[1]);
+                    }
+                });
+            } else if (messageContent.startsWith("[") && messageContent.contains("you survived")) {
+                lastTeamPlacement = 1;
+                teamPlacements.add(lastTeamPlacement);
+                lastSurvivorPlacement = 1;
+                survivorPlacements.add(lastSurvivorPlacement);
+                averageTeamPlacement = teamPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+            } else if (messageContent.contains("Game Over")) {
+                ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
+
+                    var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
+                    for (String row : sidebarRows) {
+                        if (row.contains(username)) {
                             String personalText = row.split("\uE00E")[1];
                             lastPersonalPlacement = extractNumberFromText(personalText);
                             personalPlacements.add(lastPersonalPlacement);
@@ -84,23 +95,29 @@ public class SkyBattle extends Game {
                         }
                     }
                 });
-            } else if(messageContent.contains("Game Started")) {
-                ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
-
-                    var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    if(sidebarRows.size() >= 9) {
-
-                        String playersText = sidebarRows.get(8);
-                        startingPlayerAmount = extractNumberFromText(playersText.split(":")[1]);
-                    }
-                });
-            } else if(messageContent.startsWith("[") && messageContent.contains("you survived")) {
-                lastTeamPlacement = 1;
-                teamPlacements.add(lastTeamPlacement);
-                lastSurvivorPlacement = 1;
-                survivorPlacements.add(lastSurvivorPlacement);
-                averageTeamPlacement = teamPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
             }
+            } else if (!messageContent.contains(":") && messageContent.contains("Outlived")) {
+                if (messageContent.contains("players")) {
+                    LOGGER.info("Detected a death!");
+                    deaths += 1;
+                    kdr = (double) kills / deaths;
+
+                    LOGGER.info("Starting player amount: " + startingPlayerAmount);
+                    lastSurvivorPlacement = startingPlayerAmount - extractNumberFromText(messageContent.split("Outlived")[1]);
+                    survivorPlacements.add(lastSurvivorPlacement);
+
+                    averageSurvivorPlacement = survivorPlacements.stream()
+                            .mapToDouble(p -> p)
+                            .summaryStatistics()
+                            .getAverage();
+                } else if (messageContent.contains("team")) {
+                    lastTeamPlacement = 8 - extractNumberFromText(messageContent.split("Outlived")[1]);
+                    teamPlacements.add(lastTeamPlacement);
+                    averageTeamPlacement = teamPlacements.stream()
+                            .mapToDouble(p -> p)
+                            .summaryStatistics()
+                            .getAverage();
+                }
         }
         super.onChatMessageInGame(messageText);
     }

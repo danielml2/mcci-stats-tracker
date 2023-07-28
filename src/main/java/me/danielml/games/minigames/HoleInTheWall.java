@@ -1,17 +1,17 @@
 package me.danielml.games.minigames;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import me.danielml.games.Game;
 import me.danielml.util.ScoreboardUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
-import static me.danielml.MCCIStats.LOGGER;
 
 import java.util.ArrayList;
 import java.util.DoubleSummaryStatistics;
+
+import static me.danielml.MCCIStats.LOGGER;
 
 public class HoleInTheWall extends Game {
 
@@ -32,7 +32,7 @@ public class HoleInTheWall extends Game {
         String messageContent = messageText.getString();
 
         // The icon at the start is the skull emoji in MCCI font
-        if(messageContent.contains("you were eliminated in ") && messageContent.startsWith("[\uE202]"))
+        if(messageContent.contains("you were eliminated in ") && messageContent.startsWith("["))
         {
 
             String placementText = messageContent.split("you were eliminated in")[1];

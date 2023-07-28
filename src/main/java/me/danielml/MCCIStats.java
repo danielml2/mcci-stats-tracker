@@ -52,19 +52,24 @@ public class MCCIStats implements ModInitializer {
 	private String lastSubtitle;
 	private KeyBinding configKeybinding;
 	private ConfigManager configManager;
+	private StatsHUD statsHUD;
+	private DebugScreen debugScreen;
 
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Logger enabled: " + DEBUG);
 		LOGGER.setEnabled(DEBUG);
 
+		statsHUD = new StatsHUD();
+		debugScreen = new DebugScreen();
+
 		// Loads config from constructor.
-		configManager = new ConfigManager();
+		configManager = new ConfigManager(statsHUD, debugScreen);
 
 		if(DEBUG)
-			HudRenderCallback.EVENT.register(new DebugScreen());
+			HudRenderCallback.EVENT.register(debugScreen);
 		else
-			HudRenderCallback.EVENT.register(new StatsHUD());
+			HudRenderCallback.EVENT.register(statsHUD);
 
 		ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, minecraftClient) -> {
 			LOGGER.info("Disconnected from the server!");
@@ -78,9 +83,6 @@ public class MCCIStats implements ModInitializer {
 				"MCCI Stats Tracker"
 		));
 
-		ClientPlayConnectionEvents.JOIN.register((clientPlayNetworkHandler, packetSender, minecraftClient) -> {
-			LOGGER.info("Runnable!");
-		});
 
 		ClientSendMessageEvents.CHAT.register(message -> {
 			LOGGER.info("Sent chat message!");
@@ -134,9 +136,8 @@ public class MCCIStats implements ModInitializer {
 				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
 
-				// Temporary fix for it interfering with the MCCI top GUI, later there would be an option to change the location on the screen completely.
-				StatsHUD.setStatsDisplay("\n\n" + currentGame.displayData());
-				DebugScreen.logText(debugText.toString());
+				statsHUD.setStatsDisplay(currentGame.displayData());
+				debugScreen.logText(debugText.toString());
 			});
 		});
 

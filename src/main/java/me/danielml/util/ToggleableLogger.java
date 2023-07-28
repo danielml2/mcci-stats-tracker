@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public class ToggleableLogger {
 
-    private Logger logger;
+    private final Logger logger;
     private boolean enabled = true;
 
     public ToggleableLogger(String name) {

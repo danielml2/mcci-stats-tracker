@@ -30,6 +30,8 @@ public class UIPlacementScreen extends Screen {
     private int mouseColor = 0;
 
     private int textColorHex;
+    private StatsHUD statsHUD;
+    private DebugScreen debugScreen;
 
     public UIPlacementScreen(Screen previousScreen, int startX, int startY, ConfigManager configManager) {
         super(Text.literal(""));
@@ -37,16 +39,18 @@ public class UIPlacementScreen extends Screen {
         previewY = startY;
         this.previousScreen = previousScreen;
         this.configManager = configManager;
+        this.debugScreen = configManager.getDebugScreen();
+        this.statsHUD = configManager.getStatsHUD();
     }
 
     @Override
     protected void init() {
-        textColorHex = DEBUG ? DebugScreen.getTextColorHex() : StatsHUD.getTextColorHex();
+        textColorHex = DEBUG ? statsHUD.getTextColorHex() : debugScreen.getTextColorHex();
 
         previewText = getGameByIndex(gameIndex).previewUI();
         previewMultiline = MultilineText.create(textRenderer, Text.literal(previewText), 200);
         mousePosition = MultilineText.create(textRenderer, Text.literal(previewText), 0xEEEEEE);
-        mouseColor = DEBUG ? generateHalfTransparentVersionInHex(DebugScreen.getTextColor()) : generateHalfTransparentVersionInHex(StatsHUD.getTextColor());
+        mouseColor = DEBUG ? generateHalfTransparentVersionInHex(debugScreen.getTextColor()) : generateHalfTransparentVersionInHex(statsHUD.getTextColor());
 
         instructions = MultilineText.create(textRenderer,
                 Text.literal(" Left Click to choose a position. \n " +
@@ -67,12 +71,12 @@ public class UIPlacementScreen extends Screen {
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.render(matrices, mouseX, mouseY, delta);
 
-        if(StatsHUD.isDrawingWithShadows()) {
+        if(statsHUD.isDrawingWithShadows()) {
             previewMultiline.drawWithShadow(matrices, previewX, previewY, textRenderer.fontHeight, textColorHex);
             mousePosition.drawWithShadow(matrices, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
         } else {
             previewMultiline.draw(matrices, previewX, previewY, textRenderer.fontHeight, textColorHex);
-            mousePosition.draw(matrices, previewX, previewY, textRenderer.fontHeight, mouseColor);
+            mousePosition.draw(matrices, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
         }
         instructions.drawWithShadow(matrices, width / 2 - 75, previewTextSwap.getY() - 50, textRenderer.fontHeight, 0xEEEEEE);
     }

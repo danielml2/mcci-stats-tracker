@@ -10,14 +10,14 @@ import java.awt.*;
 
 public class DebugScreen implements HudRenderCallback {
 
-    private static String textToShow = "";
-    private static double x, y;
+    public static Color DEFAULT_TEXT_COLOR = new Color(238, 238, 238, 255);
 
-    private static boolean hudEnabled = true;
-    private static boolean drawWithShadows = true;
-    private static int textColorHex = 0xEEEEEE;
-    public static Color DEFAULT = new Color(238, 238, 238, 255);
-    private static Color textColor = DEFAULT;
+    private Color textColor = DEFAULT_TEXT_COLOR;
+    private String textToShow = "";
+    private double x, y;
+    private boolean hudEnabled = true;
+    private boolean drawWithShadows = true;
+    private int textColorHex = 0xEEEEEE;
 
     @Override
     public void onHudRender(MatrixStack matrixStack, float v) {
@@ -33,34 +33,34 @@ public class DebugScreen implements HudRenderCallback {
         }
     }
 
-    public static void logText(String newText) {
-        textToShow = newText;
+    public void logText(String newText) {
+        this.textToShow = newText;
     }
 
-    public static void setHudEnabled(boolean hudEnabled) {
-        DebugScreen.hudEnabled = hudEnabled;
+    public void setHudEnabled(boolean hudEnabled) {
+        this.hudEnabled = hudEnabled;
     }
 
-    public static void setPosition(double newX, double newY) {
+    public void setPosition(double newX, double newY) {
         x = newX;
         y = newY;
     }
 
-    public static void setTextColor(Color color) {
+    public void setTextColor(Color color) {
         var hexStr = Integer.toHexString(color.getRGB());
         textColor = color;
         textColorHex = Integer.valueOf(hexStr.substring(2), 16);
     }
 
-    public static int getTextColorHex() {
+    public int getTextColorHex() {
         return textColorHex;
     }
 
-    public static Color getTextColor() {
+    public Color getTextColor() {
         return textColor;
     }
 
-    public static void setDrawWithShadows(boolean drawWithShadows) {
-        DebugScreen.drawWithShadows = drawWithShadows;
+    public void setDrawWithShadows(boolean drawWithShadows) {
+        this.drawWithShadows = drawWithShadows;
     }
 }

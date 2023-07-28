@@ -30,9 +30,14 @@ public class ConfigManager {
 
     private final HashMap<String, Object> configValues;
     private Option<Integer> hudX, hudY;
+    
+    private final StatsHUD statsHUD;
+    private final DebugScreen debugScreen;
 
-    public ConfigManager() {
+    public ConfigManager(StatsHUD statsHUD, DebugScreen debugScreen) {
         configValues = new HashMap<>();
+        this.statsHUD = statsHUD;
+        this.debugScreen = debugScreen;
         loadConfigFromFile();
         applySettings();
     }
@@ -91,7 +96,7 @@ public class ConfigManager {
                         .option(Option.<Color>createBuilder()
                                         .name(Text.literal("HUD Text Color"))
                                         .binding(
-                                                DebugScreen.DEFAULT,
+                                                DebugScreen.DEFAULT_TEXT_COLOR,
                                                 () -> getConfigValue("textColor", Color.class),
                                                 (color) -> configValues.put("textColor", color)
                                         )
@@ -145,15 +150,15 @@ public class ConfigManager {
         var drawShadows = getConfigValue("drawShadows", Boolean.class);
 
 
-        StatsHUD.setTextColor(textColor);
-        StatsHUD.setPosition(hudX, hudY);
-        StatsHUD.setHudEnabled(hudEnabled);
-        StatsHUD.setDrawWithShadows(drawShadows);
+        statsHUD.setTextColor(textColor);
+        statsHUD.setPosition(hudX, hudY);
+        statsHUD.setHudEnabled(hudEnabled);
+        statsHUD.setDrawWithShadows(drawShadows);
 
-        DebugScreen.setTextColor(textColor);
-        DebugScreen.setPosition(hudX,hudY);
-        DebugScreen.setHudEnabled(hudEnabled);
-        DebugScreen.setDrawWithShadows(drawShadows);
+        debugScreen.setTextColor(textColor);
+        debugScreen.setPosition(hudX,hudY);
+        debugScreen.setHudEnabled(hudEnabled);
+        debugScreen.setDrawWithShadows(drawShadows);
     }
 
     public void requestSetPosition(int x, int y) {
@@ -225,7 +230,7 @@ public class ConfigManager {
 
     private void loadDefaults() {
         configValues.put("hudEnabled", true);
-        configValues.put("textColor", DebugScreen.DEFAULT);
+        configValues.put("textColor", DebugScreen.DEFAULT_TEXT_COLOR);
         configValues.put("drawShadows", true);
         configValues.put("hudX", 0);
         configValues.put("hudY", 0);
@@ -237,5 +242,13 @@ public class ConfigManager {
                 serializedColor.get("blue").getAsInt(),
                 serializedColor.get("green").getAsInt()
         );
+    }
+
+    public StatsHUD getStatsHUD() {
+        return statsHUD;
+    }
+
+    public DebugScreen getDebugScreen() {
+        return debugScreen;
     }
 }

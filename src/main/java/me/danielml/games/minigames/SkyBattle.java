@@ -35,31 +35,33 @@ public class SkyBattle extends Game {
 
         String username = MinecraftClient.getInstance().getSession().getUsername();
         if(messageContent.startsWith("[")) {
-            var wordsSplit = messageContent.split(" ");
-            boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
-            LOGGER.info("Is death: " + isDeath);
-            LOGGER.info(Arrays.toString(wordsSplit));
 
-            // Double check just in case wording changes for some reason
-            if(wordsSplit.length >= 3)
-                for(int i = 0; i < 3; i++) {
-                    if(wordsSplit[i].equalsIgnoreCase(username))
-                    {
-                        isDeath = true;
-                        LOGGER.info("Found on index " + i);
-                        break;
+            if(messageContent.contains(username)) {
+                var wordsSplit = messageContent.split(" ");
+                boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
+                LOGGER.info("Is death: " + isDeath);
+                LOGGER.info(Arrays.toString(wordsSplit));
+
+                // Double check just in case wording changes for some reason
+                if(wordsSplit.length >= 3)
+                    for(int i = 0; i < 3; i++) {
+                        if(wordsSplit[i].equalsIgnoreCase(username))
+                        {
+                            isDeath = true;
+                            LOGGER.info("Found on index " + i);
+                            break;
+                        }
+
                     }
-
+                if (!isDeath) {
+                    kills += 1;
+                    LOGGER.info("Kill detected!");
+                    if (deaths == 0)
+                        kdr = kills;
+                    else
+                        kdr = (double) kills / deaths;
+                    LOGGER.info("New KDR: " + kdr);
                 }
-
-            if (messageContent.contains(username) && !isDeath) {
-                kills += 1;
-                LOGGER.info("Kill detected!");
-                if (deaths == 0)
-                    kdr = kills;
-                else
-                    kdr = (double) kills / deaths;
-                LOGGER.info("New KDR: " + kdr);
             } else if (messageContent.contains("Game Started") || messageContent.contains("Stand by for the game to begin")) {
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 

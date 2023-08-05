@@ -9,17 +9,20 @@
     "danielml2/Offlical"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://modrinth.com/mod/mcci-stats-tracker",
+    "sources": "https://github.com/danielml2/mcci-stats-tracker"
   },
 
-  "license": "CC0-1.0",
+  "license": "MIT",
   "icon": "assets/mcci-stats-tracker/icon.png",
 
   "environment": "*",
   "entrypoints": {
     "main": [
       "me.danielml.MCCIStats"
+    ],
+    "modmenu": [
+      "me.danielml.config.MCCIStatsModMenuHook"
     ]
   },
   "mixins": [
@@ -31,5 +34,10 @@
     "minecraft": "~1.19.4",
     "java": ">=17",
     "yet_another_config_lib_v3": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "update_checker": true
+    }
   }
 }

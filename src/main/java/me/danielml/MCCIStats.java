@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
@@ -43,7 +44,7 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;
@@ -51,7 +52,7 @@ public class MCCIStats implements ModInitializer {
 	private String lastTitle;
 	private String lastSubtitle;
 	private KeyBinding configKeybinding;
-	private ConfigManager configManager;
+	private static ConfigManager configManager;
 	private StatsHUD statsHUD;
 	private DebugScreen debugScreen;
 
@@ -99,7 +100,7 @@ public class MCCIStats implements ModInitializer {
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
 			if(configKeybinding.wasPressed())
-				MinecraftClient.getInstance().setScreen(configManager.getConfigUI());
+				MinecraftClient.getInstance().setScreen(getConfigScreen());
 
 			String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
 			if(!currentServer.endsWith("mccisland.net"))
@@ -216,4 +217,7 @@ public class MCCIStats implements ModInitializer {
 			});
 	}
 
+	public static Screen getConfigScreen() {
+		return configManager.getConfigUI();
+	}
 }

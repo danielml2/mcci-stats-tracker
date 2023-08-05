@@ -77,6 +77,11 @@ public class ConfigManager {
                         .styled(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://g.co/kgs/947HZ8"))))
                 .append(" and put it on the option value");
 
+        boolean isInWorld = MinecraftClient.getInstance().world != null;
+        LOGGER.info("Minecraft world: " + MinecraftClient.getInstance().world);
+        LOGGER.info("Is in world: " + isInWorld);
+        var disabledText = isInWorld ? "" : "§c§lNOTE: This option is disabled because you're not in game. ";
+
 
         return YetAnotherConfigLib.createBuilder()
                 .title(Text.literal("MCCI Stats Tracker"))
@@ -117,15 +122,13 @@ public class ConfigManager {
                                                 .name(Text.literal("Change HUD Placement"))
                                                 .text(Text.literal("Set & Preview"))
                                                 .description(OptionDescription.of(
-                                                        Text.literal("Change the placement of the stats HUD on your screen, and preview different game's text to see how it looks")))
-                                                .available(true)
-                                                .action((yaclScreen, buttonOption) -> {
-                                                    MinecraftClient.getInstance().setScreen(
-                                                            new UIPlacementScreen(yaclScreen,
-                                                                    getConfigValue("hudX", Integer.class),
-                                                                    getConfigValue("hudY", Integer.class),
-                                                                    this));
-                                                }).build()
+                                                        Text.literal(disabledText + "§fChange the placement of the stats HUD on your screen, and preview different game's text to see how it looks")))
+                                                .available(isInWorld) // For some reason, the UI placement screen kind of breaks when going to it from the title screen
+                                                .action((yaclScreen, buttonOption) -> MinecraftClient.getInstance().setScreen(
+                                                        new UIPlacementScreen(yaclScreen,
+                                                                getConfigValue("hudX", Integer.class),
+                                                                getConfigValue("hudY", Integer.class),
+                                                                this))).build()
                                         ,
                                         hudX,
                                         hudY)

@@ -1,5 +1,6 @@
 package me.danielml.screen;
 
+import me.danielml.MCCIStats;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.MultilineText;
@@ -14,22 +15,38 @@ public class DebugScreen implements HudRenderCallback {
 
     private Color textColor = DEFAULT_TEXT_COLOR;
     private String textToShow = "";
-    private double x, y;
+    private int x, y;
     private boolean hudEnabled = true;
     private boolean drawWithShadows = true;
+
+    private boolean hideOnPlayerList = true;
     private int textColorHex = 0xEEEEEE;
+
+    private MCCIStats mod;
+    public DebugScreen(MCCIStats mod) {
+        this.mod = mod;
+    }
 
     @Override
     public void onHudRender(MatrixStack matrixStack, float v) {
         var textRenderer = (MinecraftClient.getInstance()).textRenderer;
 
+        MinecraftClient minecraftClient = MinecraftClient.getInstance();
+
+        String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
+        boolean shouldHideFromPlayerList = minecraftClient.options.playerListKey.isPressed() && hideOnPlayerList;
+        boolean shouldHideFromKeybinding = mod.getHideHUDKeybinding().isPressed();
+
+        if(!currentServer.endsWith("mccisland.net") || shouldHideFromPlayerList || shouldHideFromKeybinding)
+            return;
+
         matrixStack.scale(1,1,1);
         if(hudEnabled) {
             MultilineText multilineText = MultilineText.create(textRenderer, Text.literal(textToShow), 0xEEEEEE);
             if(drawWithShadows)
-                multilineText.drawWithShadow(matrixStack, (int)x, (int)y, textRenderer.fontHeight, textColorHex);
+                multilineText.drawWithShadow(matrixStack, x, y, textRenderer.fontHeight, textColorHex);
             else
-                multilineText.draw(matrixStack, (int)x, (int)y, textRenderer.fontHeight, textColorHex);
+                multilineText.draw(matrixStack, x, y, textRenderer.fontHeight, textColorHex);
         }
     }
 
@@ -41,7 +58,7 @@ public class DebugScreen implements HudRenderCallback {
         this.hudEnabled = hudEnabled;
     }
 
-    public void setPosition(double newX, double newY) {
+    public void setPosition(int newX, int newY) {
         x = newX;
         y = newY;
     }
@@ -62,5 +79,14 @@ public class DebugScreen implements HudRenderCallback {
 
     public void setDrawWithShadows(boolean drawWithShadows) {
         this.drawWithShadows = drawWithShadows;
+    }
+
+
+    public void setHideOnPlayerList(boolean hideOnPlayerList) {
+        this.hideOnPlayerList = hideOnPlayerList;
+    }
+
+    public boolean isHidingOnPlayerList() {
+        return hideOnPlayerList;
     }
 }

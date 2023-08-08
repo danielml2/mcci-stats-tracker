@@ -31,9 +31,7 @@ import java.util.Arrays;
 
 
 public class MCCIStats implements ModInitializer {
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
+
 	public static final ToggleableLogger LOGGER = new ToggleableLogger("mcci-stats-tracker");
 
 	private static final Game[] GAMES = new Game[]{
@@ -52,6 +50,7 @@ public class MCCIStats implements ModInitializer {
 	private String lastTitle;
 	private String lastSubtitle;
 	private KeyBinding configKeybinding;
+	private KeyBinding hideHUDKeybinding;
 	private static ConfigManager configManager;
 	private StatsHUD statsHUD;
 	private DebugScreen debugScreen;
@@ -61,8 +60,21 @@ public class MCCIStats implements ModInitializer {
 		LOGGER.info("Logger enabled: " + DEBUG);
 		LOGGER.setEnabled(DEBUG);
 
-		statsHUD = new StatsHUD();
-		debugScreen = new DebugScreen();
+
+		configKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"Open Configuration Screen",
+				InputUtil.Type.KEYSYM,
+				GLFW.GLFW_KEY_END,
+				"MCCI Stats Tracker"
+		));
+		hideHUDKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"Hide HUD (While Pressed)",
+				InputUtil.Type.KEYSYM,
+				GLFW.GLFW_KEY_R,
+				"MCCI Stats Tracker"));
+
+		statsHUD = new StatsHUD(this);
+		debugScreen = new DebugScreen(this);
 
 		// Loads config from constructor.
 		configManager = new ConfigManager(statsHUD, debugScreen);
@@ -77,12 +89,6 @@ public class MCCIStats implements ModInitializer {
 			currentGame.saveData();
 		});
 
-		configKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-				"Open Configuration Screen",
-				InputUtil.Type.KEYSYM,
-				GLFW.GLFW_KEY_END,
-				"MCCI Stats Tracker"
-		));
 
 
 		ClientSendMessageEvents.CHAT.register(message -> {
@@ -219,5 +225,9 @@ public class MCCIStats implements ModInitializer {
 
 	public static Screen getConfigScreen() {
 		return configManager.getConfigUI();
+	}
+
+	public KeyBinding getHideHUDKeybinding() {
+		return hideHUDKeybinding;
 	}
 }

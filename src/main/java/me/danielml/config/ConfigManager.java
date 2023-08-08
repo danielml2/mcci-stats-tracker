@@ -115,8 +115,18 @@ public class ConfigManager {
                                         .binding(true,
                                                 () -> getConfigValue("drawShadows", Boolean.class),
                                                 (shadowSetting) -> setConfigValue("drawShadows", shadowSetting))
-                                        .controller(TickBoxControllerBuilderImpl::new)
+                                        .controller(opt -> BooleanControllerBuilder.create(opt)
+                                                .valueFormatter(val -> Text.of(val ? "ON" : "OFF")))
                                         .build())
+                        .option(Option.<Boolean>createBuilder()
+                                .name(Text.literal("Hide stats HUD when holding the player list button"))
+                                .description(OptionDescription.of(Text.literal("Should the stats hud be hidden when showing the player list, alternatively in controls you can set a keybind for hiding the hud while you hold it")))
+                                .binding(true,
+                                        () -> getConfigValue("hideOnList", Boolean.class),
+                                        (hideOnList) -> setConfigValue("hideOnList", hideOnList))
+                                .controller(opt -> BooleanControllerBuilder.create(opt)
+                                        .valueFormatter(val -> Text.of(val ? "ON" : "OFF")))
+                                .build())
                         .group(OptionGroup.createBuilder()
                                 .name(Text.literal("HUD Placement"))
                                 .options(Arrays.asList(ButtonOption.createBuilder()
@@ -150,6 +160,7 @@ public class ConfigManager {
         var hudX = getConfigValue("hudX", Integer.class);
         var hudY = getConfigValue("hudY", Integer.class);
         var textColor = getConfigValue("textColor", Color.class);
+        var hideOnPlayerList = getConfigValue("hideOnList", Boolean.class);
         var drawShadows = getConfigValue("drawShadows", Boolean.class);
 
 
@@ -157,6 +168,7 @@ public class ConfigManager {
         statsHUD.setPosition(hudX, hudY);
         statsHUD.setHudEnabled(hudEnabled);
         statsHUD.setDrawWithShadows(drawShadows);
+        statsHUD.setHideOnPlayerList(hideOnPlayerList);
 
         debugScreen.setTextColor(textColor);
         debugScreen.setPosition(hudX,hudY);
@@ -175,6 +187,7 @@ public class ConfigManager {
         configJSON.addProperty("hudY", getConfigValue("hudY", Integer.class));
         configJSON.addProperty("hudEnabled", getConfigValue("hudEnabled", Boolean.class));
         configJSON.addProperty("drawShadows", getConfigValue("drawShadows", Boolean.class));
+        configJSON.addProperty("hideOnList", getConfigValue("hideOnList", Boolean.class));
         configJSON.add("textColor", serializeColor(getConfigValue("textColor", Color.class)));
 
         File configFolder = new File(FabricLoader.getInstance().getConfigDir().toString() + "");
@@ -216,9 +229,12 @@ public class ConfigManager {
             configValues.put("hudX", jsonObject.get("hudX").getAsInt());
             configValues.put("hudY", jsonObject.get("hudY").getAsInt());
             configValues.put("textColor", deserializeColor(jsonObject.getAsJsonObject("textColor")));
+            configValues.put("hideOnList", jsonObject.get("hideOnList").getAsBoolean());
             applySettings();
         } catch (Exception e) {
             LOGGER.forceError("Failed to load config file! ", e);
+            LOGGER.forceWarn("Loading defaults for null values..");
+            loadMissingValuesAsDefaults();
         }
     }
 
@@ -235,8 +251,18 @@ public class ConfigManager {
         configValues.put("hudEnabled", true);
         configValues.put("textColor", DebugScreen.DEFAULT_TEXT_COLOR);
         configValues.put("drawShadows", true);
+        configValues.put("hideOnList", true);
         configValues.put("hudX", 0);
         configValues.put("hudY", 0);
+    }
+
+    private void loadMissingValuesAsDefaults() {
+        configValues.putIfAbsent("hudEnabled", true);
+        configValues.putIfAbsent("textColor", DebugScreen.DEFAULT_TEXT_COLOR);
+        configValues.putIfAbsent("drawShadows", true);
+        configValues.putIfAbsent("hideOnList", true);
+        configValues.putIfAbsent("hudX", 0);
+        configValues.putIfAbsent("hudY", 0);
     }
 
     private static Color deserializeColor(JsonObject serializedColor) {

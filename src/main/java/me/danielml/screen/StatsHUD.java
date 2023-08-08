@@ -1,5 +1,6 @@
 package me.danielml.screen;
 
+import me.danielml.MCCIStats;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.MultilineText;
@@ -15,18 +16,29 @@ public class StatsHUD implements HudRenderCallback {
     private Color textColor = DebugScreen.DEFAULT_TEXT_COLOR;
     private int textColorHex = 0xEEEEEE;
 
-    private static int x = 0, y = 0;
+    private int x = 0, y = 0;
     private boolean hudEnabled = true;
     private boolean drawWithShadows = true;
 
+    private boolean hideOnPlayerList = true;
+
     private MultilineText hudMultiline;
     private TextRenderer clientTextRenderer;
+
+    private MCCIStats mod;
+    public StatsHUD(MCCIStats mod) {
+        this.mod = mod;
+    }
+
     @Override
     public void onHudRender(MatrixStack matrixStack, float v) {
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
         String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
-        if(!currentServer.endsWith("mccisland.net"))
+        boolean shouldHideFromPlayerList = minecraftClient.options.playerListKey.isPressed() && hideOnPlayerList;
+        boolean shouldHideFromKeybinding = mod.getHideHUDKeybinding().isPressed();
+
+        if(!currentServer.endsWith("mccisland.net") || shouldHideFromPlayerList || shouldHideFromKeybinding)
             return;
 
         if(clientTextRenderer == null || hudMultiline == null)
@@ -78,5 +90,12 @@ public class StatsHUD implements HudRenderCallback {
     }
     public boolean isDrawingWithShadows() {
         return drawWithShadows;
+    }
+
+    public void setHideOnPlayerList(boolean hideOnPlayerList) {
+        this.hideOnPlayerList = hideOnPlayerList;
+    }
+    public boolean isHiddenOnPlayerList() {
+        return hideOnPlayerList;
     }
 }

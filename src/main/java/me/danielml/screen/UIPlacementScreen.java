@@ -132,7 +132,7 @@ public class UIPlacementScreen extends Screen {
 
         @Override
         public void setMessage(Text message) {
-            multilineMessage = MultilineText.create(textRenderer, getMessage(), width);
+            multilineMessage = MultilineText.create(textRenderer, message, width);
             super.setMessage(message);
         }
     }

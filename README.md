@@ -8,8 +8,6 @@
 
 A minecraft fabric mod, that uses game features to track your stats in those games.
 
-**NOTE: As of this early version, there isn't any configuration, Will be improving & adding later on**
-
 * [What stats are being tracked for ___?](#what-stats-are-being-tracked-for)
 * [Screenshots](#screenshots)
 * [Future Plans? / TODO](#future-plans--todo)
@@ -29,10 +27,10 @@ Here's a full list of what stats are being tracked for each game.
 | TGTTOS (To Get To The Other Side)   | Average for round placements, game placements, Best completion/whack time for current map, last game placement         |
 | Hole In The Wall | Last & Average Game Placement, Top Wall Speed survived, 
 
-## Are my stats local?
-Yes! (technically, MCC still collects some of that data) but all of the data from this mod is saved locally only, you can find the stats in the mcci-stats folder of the minecraft directory (.minecraft)
 
 ## Screenshots
+### [NEW] The new configuration options avaliable:
+![Configuration Options](screenshots/mcci-ui-configuration.gif)
 ![Battle Box](screenshots/battle%20box.png)
 *I'm not great at pvp games but I try.*
 ![Sky Battle](screenshots/skybattle.png)
@@ -43,10 +41,13 @@ Yes! (technically, MCC still collects some of that data) but all of the data fro
 ![TGTTOS](screenshots/tgttos.png)
 ![HOTW](screenshots/hotw.png)
 
+## Are my stats local?
+Yes! (technically, MCC still collects some of that data) but all of the data from this mod is saved locally only, you can find the stats in the mcci-stats folder of the minecraft directory (.minecraft)
+
 ## Future Plans / TODO
 - [x] Tracking & Detection of all games's stats 
 - [x] Saved stats to JSON files locally
-- [ ] Configuration of UI placement, colors & size
+- [x] Configuration of UI placement, colors & size
 - [ ] Messages / Pop-ups for improvements / worsens of stats (Average going down/up)
 - [ ] Internal/External Graph viewer to show stats change over time?
 - [ ] OBS Overlay Integration?

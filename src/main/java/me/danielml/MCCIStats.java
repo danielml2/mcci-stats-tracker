@@ -42,7 +42,7 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;

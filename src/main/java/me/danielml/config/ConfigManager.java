@@ -73,14 +73,15 @@ public class ConfigManager {
                 .build();
 
         var colorDescription = Text.literal("In order to change the color of it, find the §eHEX Color Code §fof it using an ")
-                .append(Text.literal("§9§nonline color picker like this")
+                .append(Text.literal("§9§lonline color picker like this")
                         .styled(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://g.co/kgs/947HZ8"))))
                 .append(" and put it on the option value");
 
         boolean isInWorld = MinecraftClient.getInstance().world != null;
         LOGGER.info("Minecraft world: " + MinecraftClient.getInstance().world);
         LOGGER.info("Is in world: " + isInWorld);
-        var disabledText = isInWorld ? "" : "§c§lNOTE: This option is disabled because you're not in game. ";
+        var placementUIDescription = isInWorld ? "§fChange the placement of the stats HUD on your screen, and preview different game's text to see how it looks"
+                : "§c§lNOTE: This option is disabled because you're not in game.";
 
 
         return YetAnotherConfigLib.createBuilder()
@@ -121,8 +122,7 @@ public class ConfigManager {
                                 .options(Arrays.asList(ButtonOption.createBuilder()
                                                 .name(Text.literal("Change HUD Placement"))
                                                 .text(Text.literal("Set & Preview"))
-                                                .description(OptionDescription.of(
-                                                        Text.literal(disabledText + "§fChange the placement of the stats HUD on your screen, and preview different game's text to see how it looks")))
+                                                .description(OptionDescription.of(Text.literal(placementUIDescription)))
                                                 .available(isInWorld) // For some reason, the UI placement screen kind of breaks when going to it from the title screen
                                                 .action((yaclScreen, buttonOption) -> MinecraftClient.getInstance().setScreen(
                                                         new UIPlacementScreen(yaclScreen,

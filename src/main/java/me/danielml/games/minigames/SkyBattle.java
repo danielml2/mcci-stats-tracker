@@ -138,7 +138,7 @@ public class SkyBattle extends Game {
 
     @Override
     public String previewUI() {
-        return  "Latest placements for Survivor: 8 Personal: 10 \n" +
+        return "Latest placements for Survivor: 8 Personal: 10 \n" +
                 " Team: 4 \n" +
                 "Avg. Survivor Placement 15.67 \n" +
                 "Avg. Personal Placement: 2.345 \n"

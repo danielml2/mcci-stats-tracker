@@ -207,18 +207,18 @@ public class ParkourWarriorSurvivor extends Game  {
 
     @Override
     public String displayData() {
-        return "Last Placement: " + lastPlacement + "\n " +
-                "Avg. Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n " +
-                "Avg. Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + " (" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n " +
+        return "Last Placement: " + lastPlacement + "\n" +
+                "Avg. Game Placement: " + ((int)averagePlacement) + " (" + twoDigitFormat.format(averagePlacement) + ") \n" +
+                "Avg. Leap Placement (In current game): " + ((int) averageLeapPlacementsInCurrentGame) + " (" + twoDigitFormat.format(averageLeapPlacementsInCurrentGame) + ") \n" +
                 "Leap " + currentPlayerLeap + " Avg. Time: " + formatTime(currentLeapAverage) + "\n" +
                 "Leap " + currentPlayerLeap + " Best Time: " + formatTime(currentLeapBest);
     }
 
     @Override
     public String previewUI() {
-        return "Last Placement: 5 \n " +
-                "Avg. Game Placement: 6 (6.34) \n " +
-                "Avg. Leap Placement (In current game): 3 (3.56) \n " +
+        return "Last Placement: 5 \n" +
+                "Avg. Game Placement: 6 (6.34) \n" +
+                "Avg. Leap Placement (In current game): 3 (3.56) \n" +
                 "Leap 4 Avg. Time: 00:32.456 \n" +
                 "Leap 4 Best Time: 00:23.45";
     }

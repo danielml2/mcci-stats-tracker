@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public class ToggleableLogger {
 
-    private Logger logger;
+    private final Logger logger;
     private boolean enabled = true;
 
     public ToggleableLogger(String name) {
@@ -34,6 +34,10 @@ public class ToggleableLogger {
     public void error(String message, Exception exception) {
         if(enabled)
             logger.error(message, exception);
+    }
+
+    public void forceWarn(String message) {
+        logger.warn(message);
     }
 
     public void forceError(String message, Exception e) {

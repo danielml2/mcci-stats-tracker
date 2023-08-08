@@ -215,6 +215,15 @@ public class ParkourWarriorSurvivor extends Game  {
     }
 
     @Override
+    public String previewUI() {
+        return "Last Placement: 5 \n " +
+                "Avg. Game Placement: 6 (6.34) \n " +
+                "Avg. Leap Placement (In current game): 3 (3.56) \n " +
+                "Leap 4 Avg. Time: 00:32.456 \n" +
+                "Leap 4 Best Time: 00:23.45";
+    }
+
+    @Override
     public String getSidebarIdentifier() {
         return "PARKOUR WARRIOR";
     }

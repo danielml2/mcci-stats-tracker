@@ -1,5 +1,6 @@
 package me.danielml;
 
+import me.danielml.config.ConfigManager;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
 import me.danielml.mixin.TitleSubtitleMixin;
@@ -9,23 +10,28 @@ import me.danielml.util.ScoreboardUtil;
 import me.danielml.util.ToggleableLogger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
-
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.text.Text;
+import org.lwjgl.glfw.GLFW;
 import java.util.Arrays;
 
 
 public class MCCIStats implements ModInitializer {
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
+
 	public static final ToggleableLogger LOGGER = new ToggleableLogger("mcci-stats-tracker");
 
 	private static final Game[] GAMES = new Game[]{
@@ -36,28 +42,54 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	private final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	private static final Game NONE = new None();
 
 	private static Game currentGame = NONE;
 
 	private String lastTitle;
 	private String lastSubtitle;
+	private KeyBinding configKeybinding;
+	private KeyBinding hideHUDKeybinding;
+	private static ConfigManager configManager;
+	private StatsHUD statsHUD;
+	private DebugScreen debugScreen;
 
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Logger enabled: " + DEBUG);
 		LOGGER.setEnabled(DEBUG);
 
+
+		configKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"Open Configuration Screen",
+				InputUtil.Type.KEYSYM,
+				GLFW.GLFW_KEY_END,
+				"MCCI Stats Tracker"
+		));
+		hideHUDKeybinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+				"Hide HUD (While Pressed)",
+				InputUtil.Type.KEYSYM,
+				GLFW.GLFW_KEY_R,
+				"MCCI Stats Tracker"));
+
+		statsHUD = new StatsHUD(this);
+		debugScreen = new DebugScreen(this);
+
+		// Loads config from constructor.
+		configManager = new ConfigManager(statsHUD, debugScreen);
+
 		if(DEBUG)
-			HudRenderCallback.EVENT.register(new DebugScreen());
+			HudRenderCallback.EVENT.register(debugScreen);
 		else
-			HudRenderCallback.EVENT.register(new StatsHUD());
+			HudRenderCallback.EVENT.register(statsHUD);
 
 		ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, minecraftClient) -> {
 			LOGGER.info("Disconnected from the server!");
 			currentGame.saveData();
 		});
+
+
 
 		ClientSendMessageEvents.CHAT.register(message -> {
 			LOGGER.info("Sent chat message!");
@@ -73,6 +105,8 @@ public class MCCIStats implements ModInitializer {
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
+			if(configKeybinding.wasPressed())
+				MinecraftClient.getInstance().setScreen(getConfigScreen());
 
 			String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
 			if(!currentServer.endsWith("mccisland.net"))
@@ -106,12 +140,11 @@ public class MCCIStats implements ModInitializer {
 				}
 
 
-				StringBuilder debugText = new StringBuilder("\n\n Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
+				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
 
-				// Temporary fix for it interfering with the MCCI top GUI, later there would be an option to change the location on the screen completely.
-				StatsHUD.setStatsDisplay("\n\n" + currentGame.displayData());
-				DebugScreen.logText(debugText.toString());
+				statsHUD.setStatsDisplay(currentGame.displayData());
+				debugScreen.logText(debugText.toString());
 			});
 		});
 
@@ -169,6 +202,13 @@ public class MCCIStats implements ModInitializer {
 		return optional.orElse(NONE);
 	}
 
+	public static Game getGameByIndex(int index) {
+		return GAMES[index];
+	}
+	public static int gameCount() {
+		return GAMES.length;
+	}
+	
 	public static void resetToNone() {
 		currentGame = NONE;
 	}
@@ -183,4 +223,11 @@ public class MCCIStats implements ModInitializer {
 			});
 	}
 
+	public static Screen getConfigScreen() {
+		return configManager.getConfigUI();
+	}
+
+	public KeyBinding getHideHUDKeybinding() {
+		return hideHUDKeybinding;
+	}
 }

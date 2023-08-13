@@ -34,14 +34,17 @@ public class TGTTOS extends Game {
         String messageContent = messageText.getString();
 
         if(messageContent.startsWith("[")) {
+            LOGGER.info("MCCI: Message started with [, most likely a game message");
             if (messageContent.contains("you finished the round and came in")) {
+                LOGGER.info("MCCI: Detected whack from message!");
                 int placement = extractNumberFromText(messageContent.split("came in")[1]);
+                LOGGER.info("MCCI: Round Placement: " + placement);
                 lastRoundPlacements.add(placement);
                 var stats = lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics();
                 roundAveragePlacements = stats.getAverage();
                 roundTime = System.currentTimeMillis() - roundTime;
-
                 double timeInSeconds = (double) roundTime / 1000;
+                LOGGER.info("MCCI: Round Time: " + timeInSeconds);
                 if (!bestMapTimes.containsKey(currentMap))
                     bestMapTimes.put(currentMap, timeInSeconds);
                 else {
@@ -52,6 +55,7 @@ public class TGTTOS extends Game {
 
             } else if (messageContent.contains("Round") && messageContent.contains("started!")) {
                 roundTime = System.currentTimeMillis();
+                LOGGER.info("MCCI: Searching for map trigger from Round Started Message");
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
@@ -59,16 +63,19 @@ public class TGTTOS extends Game {
                         String mapString = sidebarRows.get(0);
                         currentMap = mapString.split("MAP: ")[1];
                         currentMap = capitalizeString(currentMap);
-                        LOGGER.info("Current map: " + currentMap);
+                        LOGGER.info("MCCI: Current map: " + currentMap);
                         updateMapBestTime();
                     }
                 });
             } else if (messageContent.contains("Game Over")) {
-                ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
+                LOGGER.info("MCCI: Game Ended!");
+                var scoreboardOptional = ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance());
+                LOGGER.info("MCCI: Scoreboard exists: " + scoreboardOptional.isPresent());
+                scoreboardOptional.ifPresent(scoreboard -> {
 
                     String username = MinecraftClient.getInstance().getSession().getUsername();
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-
+                    LOGGER.info("MCCI: Searching for placement text in scoreboard");
                     for (String s : sidebarRows) {
                         if (s.contains(username)) {
                             String placementText = s.split("\uE00A\uE006\uE004")[1];
@@ -89,6 +96,7 @@ public class TGTTOS extends Game {
     @Override
     public void onTitleChange(String title) {
         if(title.contains("Round") || title.contains("TGTTOS")) {
+            LOGGER.info("MCCI: Searching for map trigger from Title Change");
             ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                 var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
@@ -98,7 +106,7 @@ public class TGTTOS extends Game {
                     currentMap = capitalizeString(currentMap);
                     gamePlacementAverage = this.lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
                     roundAveragePlacements = this.lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-                    LOGGER.info("Current map: " + currentMap);
+                    LOGGER.info("MCCI: Current map: " + currentMap);
                     updateMapBestTime();
                 }
             });
@@ -106,6 +114,7 @@ public class TGTTOS extends Game {
     }
 
     public void updateMapBestTime() {
+        LOGGER.info("MCCI: Updating visual best time for map: " + currentMap);
         bestCurrentMapTime = bestMapTimes.getOrDefault(currentMap, 0.0);
     }
 

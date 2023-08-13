@@ -1,5 +1,6 @@
 package me.danielml;
 
+import com.mojang.authlib.GameProfile;
 import me.danielml.config.ConfigManager;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
@@ -18,6 +19,8 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.network.message.MessageType;
+import net.minecraft.network.message.SignedMessage;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
@@ -26,7 +29,11 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
+
+import javax.print.AttributeException;
+import java.time.Instant;
 import java.util.Arrays;
 
 
@@ -42,9 +49,10 @@ public class MCCIStats implements ModInitializer {
 			new BattleBox()
 	};
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	private static final Game NONE = new None();
 
+	private String previousScreenData = "";
 	private static Game currentGame = NONE;
 
 	private String lastTitle;
@@ -142,15 +150,22 @@ public class MCCIStats implements ModInitializer {
 
 				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
-
+				if(!debugText.toString().equalsIgnoreCase(previousScreenData)) {
+					LOGGER.info("MCCI: New display data: " + debugText);
+					previousScreenData = debugText.toString();
+				}
 				statsHUD.setStatsDisplay(currentGame.displayData());
 				debugScreen.logText(debugText.toString());
 			});
 		});
 
 		ClientReceiveMessageEvents.GAME.register((text, b) -> {
-			LOGGER.info("[GAME]" + text.getString() + "(" + b + ")");
+			LOGGER.info("MCCI: [GAME]" + text.getString() + "(" + b + ")");
 			currentGame.onChatMessageInGame(text);
+		});
+		ClientReceiveMessageEvents.CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
+			LOGGER.info("MCCI: new CHAT message: " + message.getString());
+			currentGame.onChatMessageInGame(message);
 		});
 	}
 

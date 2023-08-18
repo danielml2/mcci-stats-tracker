@@ -1,6 +1,5 @@
 package me.danielml;
 
-import com.mojang.authlib.GameProfile;
 import me.danielml.config.ConfigManager;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
@@ -19,21 +18,13 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.network.message.MessageType;
-import net.minecraft.network.message.SignedMessage;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.text.Text;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import javax.print.AttributeException;
-import java.time.Instant;
 import java.util.Arrays;
 
 
@@ -160,8 +151,8 @@ public class MCCIStats implements ModInitializer {
 		});
 
 		ClientReceiveMessageEvents.GAME.register((text, b) -> {
-			LOGGER.info("MCCI: [GAME]" + text.getString() + "(" + b + ")");
-			currentGame.onChatMessageInGame(text);
+			LOGGER.info("MCCI: [CLIENT EVENT] [GAME]" + text.getString() + "(" + b + ")");
+//			currentGame.onChatMessageInGame(text);
 		});
 		ClientReceiveMessageEvents.CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
 			LOGGER.info("MCCI: new CHAT message: " + message.getString());
@@ -236,6 +227,16 @@ public class MCCIStats implements ModInitializer {
 				var rows = ScoreboardUtil.getSidebarRows(scoreboard);
 				currentGame.onSidebarUpdate(rows);
 			});
+	}
+
+	public static void injectOnGameMessage(Text text) {
+		LOGGER.info("MCCI: [MESSAGE HANDLER] [GAME]" + text.getString());
+		currentGame.onChatMessageInGame(text);
+	}
+
+	public static void injectOnGameMessagePlayHandler(Text text) {
+		LOGGER.info("MCCI: [CLIENT PLAY HANDLER] [GAME]" + text.getString());
+		currentGame.onChatMessageInGame(text);
 	}
 
 	public static Screen getConfigScreen() {

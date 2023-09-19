@@ -42,8 +42,9 @@ public class ConfigManager {
         applySettings();
     }
 
-    private <T> T getConfigValue(String key, Class<T> type) {
-        return type.cast(configValues.get(key));
+    private <T> T getConfigValue(String key, T defaultValue) {
+        Class<T> clazz = (Class<T>) defaultValue.getClass();
+        return configValues.containsKey(key) ? clazz.cast(configValues.get(key)) : defaultValue;
     }
 
     private void setConfigValue(String key, Object value) {
@@ -56,7 +57,7 @@ public class ConfigManager {
                 .available(false)
                 .description(OptionDescription.of(Text.literal("The X offset of the HUD's position on the screen (changes slightly between window sizes)")))
                 .binding(0,
-                        () -> getConfigValue("hudX", Integer.class),
+                        () -> getConfigValue("hudX", 0),
                         (newValue) -> setConfigValue("hudX", newValue)
                 )
                 .controller(IntegerFieldControllerBuilderImpl::new)
@@ -66,7 +67,7 @@ public class ConfigManager {
                 .available(false)
                 .description(OptionDescription.of(Text.literal("The Y offset of the HUD's position on the screen (changes slightly between window sizes)")))
                 .binding(0,
-                        () -> getConfigValue("hudY", Integer.class),
+                        () -> getConfigValue("hudY", 0),
                         (newValue) -> setConfigValue("hudY", newValue)
                 )
                 .controller(IntegerFieldControllerBuilderImpl::new)
@@ -93,7 +94,7 @@ public class ConfigManager {
                                 .description(OptionDescription.of(Text.literal("Should the HUD render or not (NOTE: This doesn't disable the stats tracking)")))
                                 .binding(
                                         true,
-                                        () -> getConfigValue("hudEnabled", Boolean.class),
+                                        () -> getConfigValue("hudEnabled", true),
                                         (hudToggleState) -> configValues.put("hudEnabled", hudToggleState)
                                 )
                                 .controller(opt -> BooleanControllerBuilder.create(opt)
@@ -103,7 +104,7 @@ public class ConfigManager {
                                         .name(Text.literal("HUD Text Color"))
                                         .binding(
                                                 DebugScreen.DEFAULT_TEXT_COLOR,
-                                                () -> getConfigValue("textColor", Color.class),
+                                                () -> getConfigValue("textColor", DebugScreen.DEFAULT_TEXT_COLOR),
                                                 (color) -> configValues.put("textColor", color)
                                         )
                                         .description(OptionDescription.of(colorDescription))
@@ -113,7 +114,7 @@ public class ConfigManager {
                                         .name(Text.literal("Draw Text with Shadows"))
                                         .description(OptionDescription.of(Text.literal("Should the text of the HUD rendered with or without shadows")))
                                         .binding(true,
-                                                () -> getConfigValue("drawShadows", Boolean.class),
+                                                () -> getConfigValue("drawShadows", true),
                                                 (shadowSetting) -> setConfigValue("drawShadows", shadowSetting))
                                         .controller(opt -> BooleanControllerBuilder.create(opt)
                                                 .valueFormatter(val -> Text.of(val ? "ON" : "OFF")))
@@ -122,7 +123,7 @@ public class ConfigManager {
                                 .name(Text.literal("Hide stats HUD when holding the player list button"))
                                 .description(OptionDescription.of(Text.literal("Should the stats hud be hidden when showing the player list, alternatively in controls you can set a keybind for hiding the hud while you hold it")))
                                 .binding(true,
-                                        () -> getConfigValue("hideOnList", Boolean.class),
+                                        () -> getConfigValue("hideOnList", true),
                                         (hideOnList) -> setConfigValue("hideOnList", hideOnList))
                                 .controller(opt -> BooleanControllerBuilder.create(opt)
                                         .valueFormatter(val -> Text.of(val ? "ON" : "OFF")))
@@ -136,8 +137,8 @@ public class ConfigManager {
                                                 .available(isInWorld) // For some reason, the UI placement screen kind of breaks when going to it from the title screen
                                                 .action((yaclScreen, buttonOption) -> MinecraftClient.getInstance().setScreen(
                                                         new UIPlacementScreen(yaclScreen,
-                                                                getConfigValue("hudX", Integer.class),
-                                                                getConfigValue("hudY", Integer.class),
+                                                                getConfigValue("hudX", 0),
+                                                                getConfigValue("hudY", 0),
                                                                 this))).build()
                                         ,
                                         hudX,
@@ -156,12 +157,12 @@ public class ConfigManager {
     }
 
     public void applySettings() {
-        var hudEnabled = getConfigValue("hudEnabled", Boolean.class);
-        var hudX = getConfigValue("hudX", Integer.class);
-        var hudY = getConfigValue("hudY", Integer.class);
-        var textColor = getConfigValue("textColor", Color.class);
-        var hideOnPlayerList = getConfigValue("hideOnList", Boolean.class);
-        var drawShadows = getConfigValue("drawShadows", Boolean.class);
+        var hudEnabled = getConfigValue("hudEnabled", true);
+        var hudX = getConfigValue("hudX", 0);
+        var hudY = getConfigValue("hudY", 0);
+        var textColor = getConfigValue("textColor", DebugScreen.DEFAULT_TEXT_COLOR);
+        var hideOnPlayerList = getConfigValue("hideOnList", true);
+        var drawShadows = getConfigValue("drawShadows", true);
 
 
         statsHUD.setTextColor(textColor);
@@ -183,12 +184,12 @@ public class ConfigManager {
 
     private  void serializeAndSave() {
         JsonObject configJSON = new JsonObject();
-        configJSON.addProperty("hudX", getConfigValue("hudX", Integer.class));
-        configJSON.addProperty("hudY", getConfigValue("hudY", Integer.class));
-        configJSON.addProperty("hudEnabled", getConfigValue("hudEnabled", Boolean.class));
-        configJSON.addProperty("drawShadows", getConfigValue("drawShadows", Boolean.class));
-        configJSON.addProperty("hideOnList", getConfigValue("hideOnList", Boolean.class));
-        configJSON.add("textColor", serializeColor(getConfigValue("textColor", Color.class)));
+        configJSON.addProperty("hudX", getConfigValue("hudX", 0));
+        configJSON.addProperty("hudY", getConfigValue("hudY",0));
+        configJSON.addProperty("hudEnabled", getConfigValue("hudEnabled", true));
+        configJSON.addProperty("drawShadows", getConfigValue("drawShadows", true));
+        configJSON.addProperty("hideOnList", getConfigValue("hideOnList", true));
+        configJSON.add("textColor", serializeColor(getConfigValue("textColor", DebugScreen.DEFAULT_TEXT_COLOR)));
 
         File configFolder = new File(FabricLoader.getInstance().getConfigDir().toString() + "");
         String fileName = "mcci-stats-tracker.config.json";

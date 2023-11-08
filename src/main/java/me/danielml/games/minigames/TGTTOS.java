@@ -102,11 +102,16 @@ public class TGTTOS extends Game {
                 var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
                 if(sidebarRows.size() > 0) {
                     String mapString = sidebarRows.get(0);
-                    currentMap = mapString.split("MAP: ")[1];
-                    currentMap = capitalizeString(currentMap);
-                    gamePlacementAverage = this.lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-                    roundAveragePlacements = this.lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-                    LOGGER.info("MCCI: Current map: " + currentMap);
+                    var split = mapString.split("MAP: ");
+                    if(split.length > 2) {
+                        currentMap = mapString.split("MAP: ")[1];
+                        currentMap = capitalizeString(currentMap);
+                        gamePlacementAverage = this.lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+                        roundAveragePlacements = this.lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+                        LOGGER.info("MCCI: Current map: " + currentMap);
+                    } else {
+                        LOGGER.forceWarn("Scoreboard line isn't applicable yet! doesn't include the word the map yet! The string: '" + mapString + "'");
+                    }
                     updateMapBestTime();
                 }
             });

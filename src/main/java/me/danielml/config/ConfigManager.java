@@ -307,8 +307,8 @@ public class ConfigManager {
     private static Color deserializeColor(JsonObject serializedColor) {
         return new Color(
                 serializedColor.get("red").getAsInt(),
-                serializedColor.get("blue").getAsInt(),
-                serializedColor.get("green").getAsInt()
+                serializedColor.get("green").getAsInt(),
+                serializedColor.get("blue").getAsInt()
         );
     }
 

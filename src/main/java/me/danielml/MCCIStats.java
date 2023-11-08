@@ -1,5 +1,6 @@
 package me.danielml;
 
+import me.danielml.config.ChatListenerMode;
 import me.danielml.config.ConfigManager;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
@@ -45,6 +46,7 @@ public class MCCIStats implements ModInitializer {
 
 	private String previousScreenData = "";
 	private static Game currentGame = NONE;
+	private static ChatListenerMode chatListenerMode = ChatListenerMode.FABRIC_EVENTS;
 
 	private String lastTitle;
 	private String lastSubtitle;
@@ -56,7 +58,7 @@ public class MCCIStats implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Logger enabled: " + DEBUG);
+		LOGGER.info("Debug Logger enabled: " + DEBUG);
 		LOGGER.setEnabled(DEBUG);
 
 
@@ -76,7 +78,7 @@ public class MCCIStats implements ModInitializer {
 		debugScreen = new DebugScreen(this);
 
 		// Loads config from constructor.
-		configManager = new ConfigManager(statsHUD, debugScreen);
+		configManager = new ConfigManager(statsHUD, debugScreen, this);
 
 		if(DEBUG)
 			HudRenderCallback.EVENT.register(debugScreen);
@@ -141,8 +143,8 @@ public class MCCIStats implements ModInitializer {
 
 				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
-				if(!debugText.toString().equalsIgnoreCase(previousScreenData)) {
-					LOGGER.info("MCCI: New display data: " + debugText);
+				if(DEBUG && !debugText.toString().equalsIgnoreCase(previousScreenData)) {
+					LOGGER.info("MCCI Stats: New display data: " + debugText);
 					previousScreenData = debugText.toString();
 				}
 				statsHUD.setStatsDisplay(currentGame.displayData());
@@ -151,11 +153,15 @@ public class MCCIStats implements ModInitializer {
 		});
 
 		ClientReceiveMessageEvents.GAME.register((text, b) -> {
-			LOGGER.info("MCCI: [CLIENT EVENT] [GAME]" + text.getString() + "(" + b + ")");
-//			currentGame.onChatMessageInGame(text);
+			if(chatListenerMode == ChatListenerMode.FABRIC_EVENTS)
+			{
+				LOGGER.info("MCCI Stats: [CLIENT EVENT] [GAME]" + text.getString() + "(" + b + ")");
+				currentGame.onChatMessageInGame(text);
+			}
+
 		});
 		ClientReceiveMessageEvents.CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
-			LOGGER.info("MCCI: new CHAT message: " + message.getString());
+			LOGGER.info("MCCI Stats: new CHAT message: " + message.getString());
 			currentGame.onChatMessageInGame(message);
 		});
 	}
@@ -199,6 +205,9 @@ public class MCCIStats implements ModInitializer {
 		LOGGER.info("Game Played Currently: " + newGame.getSidebarIdentifier());
 	}
 
+	public void setChatListenerMode(ChatListenerMode chatListenerMode) {
+		MCCIStats.chatListenerMode = chatListenerMode;
+	}
 
 	public Game getGameFromIdentifier(String identifier) {
 		var optional = Arrays.stream(GAMES)
@@ -229,14 +238,20 @@ public class MCCIStats implements ModInitializer {
 			});
 	}
 
-	public static void injectOnGameMessage(Text text) {
-		LOGGER.info("MCCI: [MESSAGE HANDLER] [GAME]" + text.getString());
-		currentGame.onChatMessageInGame(text);
+	public static void onMsgHandlerInjectedGameMessage(Text text) {
+		if(chatListenerMode == ChatListenerMode.MESSAGEHANDLER_INJECTION)
+		{
+			LOGGER.info("MCCI Stats: [MESSAGE HANDLER] [GAME]" + text.getString());
+			currentGame.onChatMessageInGame(text);
+		}
 	}
 
-	public static void injectOnGameMessagePlayHandler(Text text) {
-		LOGGER.info("MCCI: [CLIENT PLAY HANDLER] [GAME]" + text.getString());
-		currentGame.onChatMessageInGame(text);
+	public static void onClientPlayHandlerInjectedGameMessage(Text text) {
+		if(chatListenerMode == ChatListenerMode.CLIENTPLAYNETWORKHANDLER_INJECTION)
+		{
+			LOGGER.info("MCCI Stats: [CLIENT PLAY HANDLER] [GAME]" + text.getString());
+			currentGame.onChatMessageInGame(text);
+		}
 	}
 
 	public static Screen getConfigScreen() {

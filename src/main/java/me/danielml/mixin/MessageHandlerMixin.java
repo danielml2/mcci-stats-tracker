@@ -13,7 +13,6 @@ public class MessageHandlerMixin {
 
     @Inject(method = {"onGameMessage"}, at = @At("TAIL"))
     public void injectOnGameMessage(Text message, boolean overlay, CallbackInfo ci) {
-        MCCIStats.LOGGER.info("MCCI: New message coming from MessageHandler Injection");
-        MCCIStats.injectOnGameMessage(message);
+        MCCIStats.onMsgHandlerInjectedGameMessage(message);
     }
 }

@@ -17,6 +17,10 @@ public class ToggleableLogger {
             logger.info(message);
     }
 
+    public void forceInfo(String message) {
+        logger.info(message);
+    }
+
     public void debug(String message) {
         if(enabled)
             logger.debug(message);

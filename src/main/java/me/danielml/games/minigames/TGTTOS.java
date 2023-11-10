@@ -56,17 +56,7 @@ public class TGTTOS extends Game {
             } else if (messageContent.contains("Round") && messageContent.contains("started!")) {
                 roundTime = System.currentTimeMillis();
                 LOGGER.info("MCCI: Searching for map trigger from Round Started Message");
-                ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
-
-                    var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    if (sidebarRows.size() > 0) {
-                        String mapString = sidebarRows.get(0);
-                        currentMap = mapString.split("MAP: ")[1];
-                        currentMap = capitalizeString(currentMap);
-                        LOGGER.info("MCCI: Current map: " + currentMap);
-                        updateMapBestTime();
-                    }
-                });
+                searchForMapInScoreboard(this::updateMapBestTime);
             } else if (messageContent.contains("Game Over")) {
                 LOGGER.info("MCCI: Game Ended!");
                 var scoreboardOptional = ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance());
@@ -97,30 +87,36 @@ public class TGTTOS extends Game {
     public void onTitleChange(String title) {
         if(title.contains("Round") || title.contains("TGTTOS")) {
             LOGGER.info("MCCI: Searching for map trigger from Title Change");
-            ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
-
-                var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
-                if(sidebarRows.size() > 0) {
-                    String mapString = sidebarRows.get(0);
-                    var split = mapString.split("MAP: ");
-                    if(split.length > 2) {
-                        currentMap = mapString.split("MAP: ")[1];
-                        currentMap = capitalizeString(currentMap);
-                        gamePlacementAverage = this.lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-                        roundAveragePlacements = this.lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-                        LOGGER.info("MCCI: Current map: " + currentMap);
-                    } else {
-                        LOGGER.forceWarn("Scoreboard line isn't applicable yet! doesn't include the word the map yet! The string: '" + mapString + "'");
-                    }
-                    updateMapBestTime();
-                }
-            });
+            searchForMapInScoreboard(this::updateMapBestTime);
+            gamePlacementAverage = this.lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+            roundAveragePlacements = this.lastRoundPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
         }
     }
 
     public void updateMapBestTime() {
         LOGGER.info("MCCI: Updating visual best time for map: " + currentMap);
         bestCurrentMapTime = bestMapTimes.getOrDefault(currentMap, 0.0);
+    }
+
+    public void searchForMapInScoreboard(Runnable runOnSuccess) {
+        ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
+
+            var sidebarRows =ScoreboardUtil.getSidebarRows(scoreboard);
+            if(sidebarRows.size() > 0) {
+                sidebarRows.stream().filter(line -> line.contains("MAP:")).findFirst().ifPresentOrElse(mapString -> {
+                    var split = mapString.split("MAP: ");
+                    LOGGER.info("Found the map message! String: " + mapString);
+                    if(split.length > 1) {
+                        currentMap = mapString.split("MAP: ")[1];
+                        currentMap = capitalizeString(currentMap);
+                        LOGGER.info("MCCI: Current map: " + currentMap);
+                        runOnSuccess.run();
+                    } else {
+                        LOGGER.error("String was too short, couldn't split the map name from it!");
+                    }
+                }, () -> LOGGER.forceWarn("Couldn't find a scoreboard line that includes the map!"));
+            }
+        });
     }
 
     @Override

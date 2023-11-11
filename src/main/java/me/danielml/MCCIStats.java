@@ -38,7 +38,8 @@ public class MCCIStats implements ModInitializer {
 			new ParkourWarriorSurvivor(),
 			new SkyBattle(),
 			new TGTTOS(),
-			new BattleBox()
+			new BattleBox(),
+			new Dynaball()
 	};
 
 	public static final boolean DEBUG = true;

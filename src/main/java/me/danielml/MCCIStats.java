@@ -1,5 +1,6 @@
 package me.danielml;
 
+import me.danielml.config.ChatListenerMode;
 import me.danielml.config.ConfigManager;
 import me.danielml.games.Game;
 import me.danielml.games.minigames.*;
@@ -23,10 +24,8 @@ import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.Text;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
+
 import java.util.Arrays;
 
 
@@ -39,13 +38,16 @@ public class MCCIStats implements ModInitializer {
 			new ParkourWarriorSurvivor(),
 			new SkyBattle(),
 			new TGTTOS(),
-			new BattleBox()
+			new BattleBox(),
+			new Dynaball()
 	};
 
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	private static final Game NONE = new None();
 
+	private String previousScreenData = "";
 	private static Game currentGame = NONE;
+	private static ChatListenerMode chatListenerMode = ChatListenerMode.FABRIC_EVENTS;
 
 	private String lastTitle;
 	private String lastSubtitle;
@@ -57,7 +59,7 @@ public class MCCIStats implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Logger enabled: " + DEBUG);
+		LOGGER.info("Debug Logger enabled: " + DEBUG);
 		LOGGER.setEnabled(DEBUG);
 
 
@@ -77,7 +79,7 @@ public class MCCIStats implements ModInitializer {
 		debugScreen = new DebugScreen(this);
 
 		// Loads config from constructor.
-		configManager = new ConfigManager(statsHUD, debugScreen);
+		configManager = new ConfigManager(statsHUD, debugScreen, this);
 
 		if(DEBUG)
 			HudRenderCallback.EVENT.register(debugScreen);
@@ -142,15 +144,26 @@ public class MCCIStats implements ModInitializer {
 
 				StringBuilder debugText = new StringBuilder("Currently playing: " + currentGame.getSidebarIdentifier() + "\n");
 				debugText.append(currentGame.displayData()).append(" \n");
-
+				if(DEBUG && !debugText.toString().equalsIgnoreCase(previousScreenData)) {
+					LOGGER.info("MCCI Stats: New display data: " + debugText);
+					previousScreenData = debugText.toString();
+				}
 				statsHUD.setStatsDisplay(currentGame.displayData());
 				debugScreen.logText(debugText.toString());
 			});
 		});
 
 		ClientReceiveMessageEvents.GAME.register((text, b) -> {
-			LOGGER.info("[GAME]" + text.getString() + "(" + b + ")");
-			currentGame.onChatMessageInGame(text);
+			if(chatListenerMode == ChatListenerMode.FABRIC_EVENTS)
+			{
+				LOGGER.info("MCCI Stats: [CLIENT EVENT] [GAME]" + text.getString() + "(" + b + ")");
+				currentGame.onChatMessageInGame(text);
+			}
+
+		});
+		ClientReceiveMessageEvents.CHAT.register((message, signedMessage, sender, params, receptionTimestamp) -> {
+			LOGGER.info("MCCI Stats: new CHAT message: " + message.getString());
+			currentGame.onChatMessageInGame(message);
 		});
 	}
 
@@ -193,6 +206,9 @@ public class MCCIStats implements ModInitializer {
 		LOGGER.info("Game Played Currently: " + newGame.getSidebarIdentifier());
 	}
 
+	public void setChatListenerMode(ChatListenerMode chatListenerMode) {
+		MCCIStats.chatListenerMode = chatListenerMode;
+	}
 
 	public Game getGameFromIdentifier(String identifier) {
 		var optional = Arrays.stream(GAMES)
@@ -221,6 +237,22 @@ public class MCCIStats implements ModInitializer {
 				var rows = ScoreboardUtil.getSidebarRows(scoreboard);
 				currentGame.onSidebarUpdate(rows);
 			});
+	}
+
+	public static void onMsgHandlerInjectedGameMessage(Text text) {
+		if(chatListenerMode == ChatListenerMode.MESSAGEHANDLER_INJECTION)
+		{
+			LOGGER.info("MCCI Stats: [MESSAGE HANDLER] [GAME]" + text.getString());
+			currentGame.onChatMessageInGame(text);
+		}
+	}
+
+	public static void onClientPlayHandlerInjectedGameMessage(Text text) {
+		if(chatListenerMode == ChatListenerMode.CLIENTPLAYNETWORKHANDLER_INJECTION)
+		{
+			LOGGER.info("MCCI Stats: [CLIENT PLAY HANDLER] [GAME]" + text.getString());
+			currentGame.onChatMessageInGame(text);
+		}
 	}
 
 	public static Screen getConfigScreen() {

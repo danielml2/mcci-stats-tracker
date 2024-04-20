@@ -52,7 +52,7 @@ public class ParkourWarriorSurvivor extends Game  {
                 var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
 
                 // I would use the normal message it sends in the chat, but that just doesn't make sense at all and is just wrong sometimes
-                String playersEliminatedText = sidebarRows.get(3);
+                String playersEliminatedText = sidebarRows.stream().filter(s -> s.contains("PLAYERS ELIMINATED")).findFirst().orElse("");
                 int playersEliminated = extractNumberFromText(playersEliminatedText.split(":")[1]);
 
                 int placement = startPlayerAmount - playersEliminated;
@@ -128,16 +128,13 @@ public class ParkourWarriorSurvivor extends Game  {
 
         } else if(messageContent.contains("Stand by for the game") && messageContent.startsWith("[")) {
             LOGGER.info("Reset screen for start of game!");
-            currentPlayerLeap = 1;
-            leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
-            averageLeapPlacementsInCurrentGame = 0;
-            playerCompletedLeaps = 1;
-            currentGameLeap = 1;
-            eliminated = false;
-            averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
+            resetGameStateTrackers();
             updateCurrentLeapStats();
         } else if(messageContent.contains("Leap") && messageContent.contains("started") && messageContent.startsWith("[") && !eliminated) {
             currentPlayerLeap = extractNumberFromText(messageContent.split("Leap")[1]);
+            if(currentPlayerLeap == 1) {
+
+            }
             LOGGER.info("Leap " + currentPlayerLeap + " started!");
             unfinishedLeapTime = System.currentTimeMillis();
             updateCurrentLeapStats();
@@ -180,25 +177,19 @@ public class ParkourWarriorSurvivor extends Game  {
             ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
                 var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
 
-                String playersRemaining = sidebarRows.get(3);
+                String playersEliminatedText = sidebarRows.stream().filter(s -> s.contains("PLAYERS ELIMINATED")).findFirst().orElse("");
 
-                var split = playersRemaining.split("/");
+                var split = playersEliminatedText.split("/");
                 if(split.length < 2)
                 {
                     // In case parkour warrior is for some reason loaded anyway when entering the dojo
                     resetToNone();
                 } else {
-                    startPlayerAmount = extractNumberFromText(playersRemaining.split("/")[1]);
+                    startPlayerAmount = extractNumberFromText(playersEliminatedText.split("/")[1]);
 
                     // Extra reset just in case it forgets for some reason and the standby message doesn't work for some reason
                     LOGGER.info("Reset screen from title!");
-                    currentPlayerLeap = 1;
-                    leapPlacementsInCurrentGame = new int[]{-1, -1, -1, -1, -1, -1, -1, -1};
-                    averageLeapPlacementsInCurrentGame = 0;
-                    playerCompletedLeaps = 1;
-                    averagePlacement = lastPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-                    currentGameLeap = 1;
-                    eliminated = false;
+                   resetGameStateTrackers();
                     updateCurrentLeapStats();
                 }
             });
@@ -240,6 +231,14 @@ public class ParkourWarriorSurvivor extends Game  {
         }
     }
 
+    public void resetGameStateTrackers() {
+        leapPlacementsInCurrentGame = new int[]{-1,-1,-1,-1,-1,-1,-1,-1};
+        averageLeapPlacementsInCurrentGame = 0;
+        playerCompletedLeaps = 1;
+        currentGameLeap = 1;
+        eliminated = false;
+    }
+
     public int getLeapPlacementFromSidebar(int leapNum) {
 
         String leapRanksRows;
@@ -252,8 +251,8 @@ public class ParkourWarriorSurvivor extends Game  {
         if(sidebarRows.size() < 2)
             return -1;
 
-        // Rank rows show in Index 1 of the sidebar.
-        leapRanksRows = sidebarRows.get(1);
+        // Rank rows show in Index 4 of the sidebar.
+        leapRanksRows = sidebarRows.get(4);
 
         Pattern pattern = Pattern.compile("\\d+");
         Matcher matcher = pattern.matcher(leapRanksRows);

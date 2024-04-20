@@ -38,14 +38,13 @@ public class SkyBattle extends Game {
 
             if(messageContent.contains(username)) {
                 var wordsSplit = messageContent.split(" ");
-                boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
-                LOGGER.info("Is death: " + isDeath);
+                boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].contains(username);
                 LOGGER.info(Arrays.toString(wordsSplit));
 
                 // Double check just in case wording changes for some reason
                 if(wordsSplit.length >= 3)
                     for(int i = 0; i < 3; i++) {
-                        if(wordsSplit[i].equalsIgnoreCase(username))
+                        if(wordsSplit[i].contains(username))
                         {
                             isDeath = true;
                             LOGGER.info("Found on index " + i);
@@ -53,6 +52,7 @@ public class SkyBattle extends Game {
                         }
 
                     }
+                LOGGER.info("Is death: " + isDeath);
                 if (!isDeath) {
                     kills += 1;
                     LOGGER.info("Kill detected!");
@@ -66,11 +66,20 @@ public class SkyBattle extends Game {
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    if (sidebarRows.size() >= 9) {
-
-                        String playersText = sidebarRows.get(8);
-                        startingPlayerAmount = extractNumberFromText(playersText.split(":")[1]);
+                    LOGGER.info("SIDEBAR ROWS AT GAME START");
+                    LOGGER.info(Arrays.toString(sidebarRows.toArray()));
+                    startingPlayerAmount = 0;
+                    for(String row : sidebarRows) {
+                        if(row.contains("PLAYERS REMAINING"))
+                        {
+                            startingPlayerAmount = extractNumberFromText(row.split(":")[1]);
+                            LOGGER.info("Found starting player amount: " + startingPlayerAmount);
+                            break;
+                        }
                     }
+                    // In case for some reason, it doesn't find the starting amount of players from the sidebar, in the case there's less than 32 players, just assume there is 32
+                    if(startingPlayerAmount == 0)
+                        startingPlayerAmount = 32;
                 });
             } else if (messageContent.startsWith("[") && messageContent.contains("you survived")) {
                 lastTeamPlacement = 1;

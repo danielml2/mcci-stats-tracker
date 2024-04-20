@@ -3,13 +3,11 @@ package me.danielml.util;
 
 import static me.danielml.MCCIStats.LOGGER;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.*;
 import org.slf4j.Logger;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ScoreboardUtil {
@@ -19,18 +17,10 @@ public class ScoreboardUtil {
     }
 
     public static List<String> getSidebarRows(Scoreboard scoreboard) {
-        var list = scoreboard.getKnownPlayers()
-                .stream()
-                .map((playerName) -> {
-                    var team = scoreboard.getPlayerTeam(playerName);
-                    if(team != null)
-                        return team.getPrefix().getString();
-                    else
-                        return "Team is null";
-                })
-                .collect(Collectors.toList());
-        Collections.reverse(list);
-        return list;
+        return scoreboard.getTeams().stream()
+                .filter(team -> !team.getPrefix().getString().equals(""))
+                .map(team -> team.getPrefix().getString())
+                .toList();
     }
 
 }

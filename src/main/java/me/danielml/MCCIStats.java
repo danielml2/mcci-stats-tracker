@@ -20,13 +20,16 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.text.Text;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 
 public class MCCIStats implements ModInitializer {
@@ -104,6 +107,8 @@ public class MCCIStats implements ModInitializer {
 					rowIndex++;
 				}
 				}));
+
+
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
@@ -117,7 +122,7 @@ public class MCCIStats implements ModInitializer {
 			var scoreboardOptional = ScoreboardUtil.getCurrentScoreboard(minecraftClient);
 			scoreboardOptional.ifPresent(scoreboard -> {
 
-				ScoreboardObjective objective = scoreboard.getObjectiveForSlot(Scoreboard.getDisplaySlotId("sidebar"));
+				ScoreboardObjective objective = scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.SIDEBAR);
 
 				if(objective == null)
 					return;
@@ -168,7 +173,6 @@ public class MCCIStats implements ModInitializer {
 	}
 
 	public void detectMode(ScoreboardObjective objective) {
-		FabricLoader.getInstance().getGameDir();
 		var objectiveDisplayName = objective.getDisplayName();
 		if(objectiveDisplayName.getSiblings().size() < 3) {
 			if(!(currentGame instanceof None))

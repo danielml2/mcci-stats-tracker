@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.MultilineText;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 
 import java.awt.*;
@@ -31,7 +31,7 @@ public class StatsHUD implements HudRenderCallback {
     }
 
     @Override
-    public void onHudRender(MatrixStack matrixStack, float v) {
+    public void onHudRender(DrawContext drawContext, float v) {
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
 
         String currentServer = minecraftClient.getCurrentServerEntry() != null ? minecraftClient.getCurrentServerEntry().address : "";
@@ -47,13 +47,12 @@ public class StatsHUD implements HudRenderCallback {
             hudMultiline = MultilineText.create(clientTextRenderer, Text.literal(statsDisplay), 0xEEEEEE);
         }
 
-        matrixStack.scale(1,1,1);
         if(hudEnabled)
         {
             if(drawWithShadows)
-                hudMultiline.drawWithShadow(matrixStack, x, y, clientTextRenderer.fontHeight, textColorHex);
+                hudMultiline.drawWithShadow(drawContext, x, y, clientTextRenderer.fontHeight, textColorHex);
             else
-                hudMultiline.draw(matrixStack, x, y, clientTextRenderer.fontHeight, textColorHex);
+                hudMultiline.draw(drawContext, x, y, clientTextRenderer.fontHeight, textColorHex);
         }
     }
 

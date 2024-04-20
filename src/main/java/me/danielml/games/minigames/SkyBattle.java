@@ -38,14 +38,13 @@ public class SkyBattle extends Game {
 
             if(messageContent.contains(username)) {
                 var wordsSplit = messageContent.split(" ");
-                boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
-                LOGGER.info("Is death: " + isDeath);
+                boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].contains(username);
                 LOGGER.info(Arrays.toString(wordsSplit));
 
                 // Double check just in case wording changes for some reason
                 if(wordsSplit.length >= 3)
                     for(int i = 0; i < 3; i++) {
-                        if(wordsSplit[i].equalsIgnoreCase(username))
+                        if(wordsSplit[i].contains(username))
                         {
                             isDeath = true;
                             LOGGER.info("Found on index " + i);
@@ -53,6 +52,7 @@ public class SkyBattle extends Game {
                         }
 
                     }
+                LOGGER.info("Is death: " + isDeath);
                 if (!isDeath) {
                     kills += 1;
                     LOGGER.info("Kill detected!");
@@ -66,11 +66,20 @@ public class SkyBattle extends Game {
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    if (sidebarRows.size() >= 9) {
-
-                        String playersText = sidebarRows.get(8);
-                        startingPlayerAmount = extractNumberFromText(playersText.split(":")[1]);
+                    LOGGER.info("SIDEBAR ROWS AT GAME START");
+                    LOGGER.info(Arrays.toString(sidebarRows.toArray()));
+                    startingPlayerAmount = 0;
+                    for(String row : sidebarRows) {
+                        if(row.contains("PLAYERS REMAINING"))
+                        {
+                            startingPlayerAmount = extractNumberFromText(row.split(":")[1]);
+                            LOGGER.info("Found starting player amount: " + startingPlayerAmount);
+                            break;
+                        }
                     }
+                    // In case for some reason, it doesn't find the starting amount of players from the sidebar, in the case there's less than 32 players, just assume there is 32
+                    if(startingPlayerAmount == 0)
+                        startingPlayerAmount = 32;
                 });
             } else if (messageContent.startsWith("[") && messageContent.contains("you survived")) {
                 lastTeamPlacement = 1;
@@ -78,26 +87,8 @@ public class SkyBattle extends Game {
                 lastSurvivorPlacement = 1;
                 survivorPlacements.add(lastSurvivorPlacement);
                 averageTeamPlacement = teamPlacements.stream().mapToDouble(p -> p).summaryStatistics().getAverage();
-            } else if (messageContent.contains("Game Over")) {
-                ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
-
-                    var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    for (String row : sidebarRows) {
-                        if (row.contains(username)) {
-                            String personalText = row.split("\uE00E")[1];
-                            lastPersonalPlacement = extractNumberFromText(personalText);
-                            personalPlacements.add(lastPersonalPlacement);
-
-                            averagePersonalPlacement = personalPlacements
-                                    .stream()
-                                    .mapToDouble(p -> p)
-                                    .summaryStatistics()
-                                    .getAverage();
-                            break;
-                        }
-                    }
-                });
             }
+
             } else if (!messageContent.contains(":") && messageContent.contains("Outlived")) {
                 if (messageContent.contains("players")) {
                     LOGGER.info("Detected a death!");
@@ -127,11 +118,10 @@ public class SkyBattle extends Game {
 
     @Override
     public String displayData() {
-        return "Latest placements for Survivor: " + lastSurvivorPlacement + " Personal: " + lastPersonalPlacement + " \n" +
+        return "Latest placements for Survivor: " + lastSurvivorPlacement  + "\n" +
                 " Team: " + lastTeamPlacement + " \n" +
                 "Avg. Survivor Placement " + twoDigitFormat.format(averageSurvivorPlacement) + " \n" +
-                "Avg. Personal Placement: " + twoDigitFormat.format(averagePersonalPlacement) + " \n"
-                + "Avg. Team placement: " + twoDigitFormat.format(averageTeamPlacement) + " \n" +
+                 "Avg. Team placement: " + twoDigitFormat.format(averageTeamPlacement) + " \n" +
                 "KDR: " + twoDigitFormat.format(kdr) + " (Kills: " + kills + " Deaths: " + deaths + ")";
 
     }
@@ -141,8 +131,7 @@ public class SkyBattle extends Game {
         return "Latest placements for Survivor: 8 Personal: 10 \n" +
                 " Team: 4 \n" +
                 "Avg. Survivor Placement 15.67 \n" +
-                "Avg. Personal Placement: 2.345 \n"
-                + "Avg. Team placement: 6.45 \n" +
+                "Avg. Team placement: 6.45 \n" +
                 "KDR: 0.88 (Kills: 53 Deaths: 60)";
     }
 

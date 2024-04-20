@@ -1,12 +1,11 @@
 package me.danielml.screen;
 
-import me.danielml.MCCIStats;
 import me.danielml.config.ConfigManager;
 import net.minecraft.client.font.MultilineText;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 
 import java.awt.*;
@@ -30,8 +29,8 @@ public class UIPlacementScreen extends Screen {
     private int mouseColor = 0;
 
     private int textColorHex;
-    private StatsHUD statsHUD;
-    private DebugScreen debugScreen;
+    private final StatsHUD statsHUD;
+    private final DebugScreen debugScreen;
 
     public UIPlacementScreen(Screen previousScreen, int startX, int startY, ConfigManager configManager) {
         super(Text.literal(""));
@@ -68,22 +67,22 @@ public class UIPlacementScreen extends Screen {
     }
 
     @Override
-    public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        super.render(matrices, mouseX, mouseY, delta);
+    public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
+        super.render(drawContext, mouseX, mouseY, delta);
 
         if(statsHUD.isDrawingWithShadows()) {
-            previewMultiline.drawWithShadow(matrices, previewX, previewY, textRenderer.fontHeight, textColorHex);
-            mousePosition.drawWithShadow(matrices, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
+            previewMultiline.drawWithShadow(drawContext, previewX, previewY, textRenderer.fontHeight, textColorHex);
+            mousePosition.drawWithShadow(drawContext, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
         } else {
-            previewMultiline.draw(matrices, previewX, previewY, textRenderer.fontHeight, textColorHex);
-            mousePosition.draw(matrices, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
+            previewMultiline.draw(drawContext, previewX, previewY, textRenderer.fontHeight, textColorHex);
+            mousePosition.draw(drawContext, mouseX, mouseY, textRenderer.fontHeight, mouseColor);
         }
-        instructions.drawWithShadow(matrices, width / 2 - 75, previewTextSwap.getY() - 50, textRenderer.fontHeight, 0xEEEEEE);
+        instructions.drawWithShadow(drawContext, width / 2 - 75, previewTextSwap.getY() - 50, textRenderer.fontHeight, 0xEEEEEE);
     }
 
     public int generateHalfTransparentVersionInHex(Color color) {
         Color newColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), 127);
-         return  (newColor.getAlpha() << 24) | (newColor.getRed() << 16) | (newColor.getGreen() << 8) | newColor.getBlue();
+        return  (newColor.getAlpha() << 24) | (newColor.getRed() << 16) | (newColor.getGreen() << 8) | newColor.getBlue();
     }
 
     public void changePreviewText() {
@@ -126,8 +125,8 @@ public class UIPlacementScreen extends Screen {
         }
 
         @Override
-        public void drawMessage(MatrixStack matrices, TextRenderer textRenderer, int color) {
-            multilineMessage.drawCenterWithShadow(matrices, getX() + (width / 2), getY() + (height / 2) - textRenderer.fontHeight, textRenderer.fontHeight, 0xEEEEEE);
+        public void drawMessage(DrawContext drawContext, TextRenderer textRenderer, int color) {
+            multilineMessage.drawCenterWithShadow(drawContext, getX() + (width / 2), getY() + (height / 2) - textRenderer.fontHeight, textRenderer.fontHeight, 0xEEEEEE);
         }
 
         @Override

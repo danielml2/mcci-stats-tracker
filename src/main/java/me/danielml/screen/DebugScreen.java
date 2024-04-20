@@ -4,7 +4,7 @@ import me.danielml.MCCIStats;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.MultilineText;
-import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.text.Text;
 
 import java.awt.*;
@@ -28,7 +28,7 @@ public class DebugScreen implements HudRenderCallback {
     }
 
     @Override
-    public void onHudRender(MatrixStack matrixStack, float v) {
+    public void onHudRender(DrawContext drawContext, float v) {
         var textRenderer = (MinecraftClient.getInstance()).textRenderer;
 
         MinecraftClient minecraftClient = MinecraftClient.getInstance();
@@ -40,13 +40,12 @@ public class DebugScreen implements HudRenderCallback {
         if(!currentServer.endsWith("mccisland.net") || shouldHideFromPlayerList || shouldHideFromKeybinding)
             return;
 
-        matrixStack.scale(1,1,1);
         if(hudEnabled) {
             MultilineText multilineText = MultilineText.create(textRenderer, Text.literal(textToShow), 0xEEEEEE);
             if(drawWithShadows)
-                multilineText.drawWithShadow(matrixStack, x, y, textRenderer.fontHeight, textColorHex);
+                multilineText.drawWithShadow(drawContext, x, y, textRenderer.fontHeight, textColorHex);
             else
-                multilineText.draw(matrixStack, x, y, textRenderer.fontHeight, textColorHex);
+                multilineText.draw(drawContext, x, y, textRenderer.fontHeight, textColorHex);
         }
     }
 

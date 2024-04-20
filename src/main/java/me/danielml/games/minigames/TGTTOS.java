@@ -68,7 +68,7 @@ public class TGTTOS extends Game {
                     LOGGER.info("MCCI: Searching for placement text in scoreboard");
                     for (String s : sidebarRows) {
                         if (s.contains(username)) {
-                            String placementText = s.split("\uE00A\uE006\uE004")[1];
+                            String placementText = s.split("\uE004")[1];
                             int finalPlacement = extractNumberFromText(placementText);
                             lastPlacement = finalPlacement;
                             LOGGER.info("Game placement: " + finalPlacement);

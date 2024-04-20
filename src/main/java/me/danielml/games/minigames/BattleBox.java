@@ -25,6 +25,8 @@ public class BattleBox extends Game {
     private double roundWLR, averagePersonalPlacement, averageTeamPlacement;
     private double kdr;
 
+    private String currentTeam = "";
+
     @Override
     public void onChatMessageInGame(Text messageText) {
 
@@ -33,35 +35,54 @@ public class BattleBox extends Game {
 
         // Kill messages & Round lost messages
         if(messageContent.startsWith("[")) {
-            var wordsSplit = messageContent.split(" ");
-            boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].equalsIgnoreCase(username);
-            LOGGER.info("Is death: " + isDeath);
-            LOGGER.info(Arrays.toString(wordsSplit));
-
-            // Double check just in case wording changes for some reason
-            if(wordsSplit.length >= 3)
-                for(int i = 0; i < 3; i++) {
-                    if(wordsSplit[i].equalsIgnoreCase(username))
-                    {
-                        isDeath = true;
-                        LOGGER.info("Found on index " + i);
-                        break;
+            if(messageContent.contains(username)) {
+                if(messageContent.contains("Top players")) {
+                    String[] messageRows = messageContent.split("\uE010");
+                    for(String messageRow : messageRows) {
+                        if(messageRow.contains(username))
+                        {
+                            int personalPlacement = extractNumberFromText(messageRow);
+                            LOGGER.info("Found personal placement! " + personalPlacement);
+                            lastPersonalPlacement = personalPlacement;
+                            averagePersonalPlacement = personalPlacements.stream()
+                                    .mapToDouble(p -> p)
+                                    .summaryStatistics()
+                                    .getAverage();
+                            LOGGER.info("New average personal: " + averagePersonalPlacement);
+                            break;
+                        }
                     }
-
                 }
 
-            if(messageContent.contains(username) && !isDeath) {
-                LOGGER.info("Detected a kill!");
-                kills += 1;
-                if(deaths == 0)
-                    kdr = kills;
-                else
+                var wordsSplit = messageContent.split(" ");
+                boolean isDeath = wordsSplit.length >= 3 && wordsSplit[2].contains(username);
+                LOGGER.info("Is death: " + isDeath);
+                LOGGER.info(Arrays.toString(wordsSplit));
+
+                // Double check just in case wording changes for some reason
+                if(wordsSplit.length >= 3)
+                    for(int i = 0; i < 3; i++) {
+                        if(wordsSplit[i].contains(username))
+                        {
+                            isDeath = true;
+                            LOGGER.info("Found on index " + i);
+                            break;
+                        }
+                    }
+                if(!isDeath) {
+                    LOGGER.info("Detected a kill!");
+                    kills += 1;
+                    if(deaths == 0)
+                        kdr = kills;
+                    else
+                        kdr = (double) kills / deaths;
+                } else {
+                    deaths += 1;
+                    LOGGER.info("Detected a death!");
                     kdr = (double) kills / deaths;
-            } else if(messageContent.contains(username)) {
-                deaths += 1;
-                LOGGER.info("Detected a death!");
-                kdr = (double) kills / deaths;
-            } else if(messageContent.contains("you lost")) {
+                }
+            }
+             else if(messageContent.contains("you lost")) {
                 roundLosses += 1;
                 roundWLR = (double) roundWins / roundLosses;
                 LOGGER.info("Round lost! New WLR: " + roundWLR);
@@ -76,40 +97,34 @@ public class BattleBox extends Game {
                 ScoreboardUtil.getCurrentScoreboard(MinecraftClient.getInstance()).ifPresent(scoreboard -> {
 
                     var sidebarRows = ScoreboardUtil.getSidebarRows(scoreboard);
-                    int placementsFoundCount = 0;
                     for(String row: sidebarRows) {
-
-                        if(row.contains("\uE00E\uE00A\uE006\uE004")) {
-                            String teamText = row.split("\uE00E\uE00A\uE006\uE004")[1];
+                        if(row.contains(currentTeam)) {
+                            String teamText = row.split("\uE00E")[1];
                             lastTeamPlacement = extractNumberFromText(teamText);
                             teamPlacements.add(lastTeamPlacement);
-                            placementsFoundCount++;
-                        } else if(row.contains(username)) {
-                            String personalText = row.split("\uE00E")[1];
-                            lastPersonalPlacement = extractNumberFromText(personalText);
-                            personalPlacements.add(lastPersonalPlacement);
-                            placementsFoundCount++;
-                        }
-                        if(placementsFoundCount >= 2)
+                            LOGGER.info("Found team placement: " + lastTeamPlacement);
                             break;
+                        }
                     }
 
-                    averagePersonalPlacement = personalPlacements.stream()
-                            .mapToDouble(p -> p)
-                            .summaryStatistics()
-                            .getAverage();
                     averageTeamPlacement = teamPlacements.stream()
                             .mapToDouble(p -> p)
                             .summaryStatistics()
                             .getAverage();
-                    LOGGER.info("New average personal: " + averagePersonalPlacement);
                     LOGGER.info("New average team: " + averageTeamPlacement);
                 });
             }
         }
     }
 
+    @Override
+    public void onSubtitleChange(String subtitle) {
+        if(subtitle.contains("vs.") && currentTeam.equalsIgnoreCase("")) {
 
+            currentTeam = subtitle.split("vs.")[0].replace("Team ", "Team");
+            LOGGER.info("CURRENT TEAM: " + currentTeam);
+        }
+    }
 
     @Override
     public String displayData() {

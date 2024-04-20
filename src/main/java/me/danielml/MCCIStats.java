@@ -42,7 +42,8 @@ public class MCCIStats implements ModInitializer {
 			new SkyBattle(),
 			new TGTTOS(),
 			new BattleBox(),
-			new Dynaball()
+			new Dynaball(),
+			new RocketSpleefRush()
 	};
 
 	public static final boolean DEBUG = true;
